@@ -1,0 +1,302 @@
+{
+  "model": "standardized logistic regression",
+  "target": "spread among already-burning thin samples",
+  "training_rows": 38,
+  "training_flights": 18,
+  "outcome_source": "estimated labels digitized from Takahashi et al. Fig. 7 and joined to S1 conditions",
+  "training_label_counts": {
+    "spread": 24,
+    "extinct": 14
+  },
+  "numeric_features": {
+    "gravity_g": {
+      "mean": 0.23904210526315792,
+      "scale": 0.11092888578197757,
+      "min": 0.0833,
+      "max": 0.375
+    },
+    "o2_pct": {
+      "mean": 17.63157894736842,
+      "scale": 2.2759735063620687,
+      "min": 15.0,
+      "max": 21.0
+    },
+    "pressure_kPa": {
+      "mean": 76.54210526315791,
+      "scale": 22.27555459264645,
+      "min": 56.5,
+      "max": 101.3
+    },
+    "thickness_mm": {
+      "mean": 0.10578947368421052,
+      "scale": 0.031151715247813988,
+      "min": 0.05,
+      "max": 0.125
+    }
+  },
+  "categorical_features": {
+    "material": [
+      "ACRYPLEN",
+      "Filter paper"
+    ]
+  },
+  "coefficients": {
+    "numeric__gravity_g": -0.1326176649467688,
+    "numeric__o2_pct": 1.8450713980433928,
+    "numeric__pressure_kPa": 0.9581069619504781,
+    "numeric__thickness_mm": -0.005591099133148134,
+    "categorical__material_ACRYPLEN": 0.8303840603317513,
+    "categorical__material_Filter paper": -0.3476539978582376
+  },
+  "intercept": 0.4827300624735136,
+  "classification_threshold_log_odds": 0.0,
+  "probability_calibrated": false,
+  "heldout_errors": {
+    "one_sixth": 5,
+    "one_sixth_cases": 17,
+    "three_eighths": 3,
+    "three_eighths_cases": 12
+  },
+  "domain_note": "Training data cover 0.0833\u20130.375 g, 15\u201321% O2, 56.5\u2013101.3 kPa, 0.05\u20130.125 mm, and ACRYPLEN or filter paper. Input-range checks do not establish that a combination is validated.",
+  "limits": [
+    "Exploratory classification score, not a calibrated probability or fire-safety risk.",
+    "Predicts spread versus extinction only for already-burning thin samples.",
+    "Does not predict ignition, heat release, flame size, or habitat safety.",
+    "FM2 Synergy Pro fabric and 25-37% O2 are outside the training domain."
+  ],
+  "gravity_holdout_models": {
+    "Leave-1/6g-Out": {
+      "model": "standardized logistic regression",
+      "target": "spread among already-burning thin samples",
+      "training_rows": 21,
+      "training_flights": 11,
+      "outcome_source": "estimated labels digitized from Takahashi et al. Fig. 7 and joined to S1 conditions",
+      "training_label_counts": {
+        "spread": 12,
+        "extinct": 9
+      },
+      "numeric_features": {
+        "gravity_g": {
+          "mean": 0.297604761904762,
+          "scale": 0.12083233750469315,
+          "min": 0.0833,
+          "max": 0.375
+        },
+        "o2_pct": {
+          "mean": 17.714285714285715,
+          "scale": 2.312344865176949,
+          "min": 15.0,
+          "max": 21.0
+        },
+        "pressure_kPa": {
+          "mean": 77.83333333333333,
+          "scale": 22.374588760963235,
+          "min": 56.5,
+          "max": 101.3
+        },
+        "thickness_mm": {
+          "mean": 0.10880952380952377,
+          "scale": 0.028615046071568794,
+          "min": 0.05,
+          "max": 0.125
+        }
+      },
+      "categorical_features": {
+        "material": [
+          "ACRYPLEN",
+          "Filter paper"
+        ]
+      },
+      "coefficients": {
+        "numeric__gravity_g": 0.051076378016652914,
+        "numeric__o2_pct": 1.4925757569112457,
+        "numeric__pressure_kPa": 0.9508289336765944,
+        "numeric__thickness_mm": 0.06120775226314613,
+        "categorical__material_ACRYPLEN": 0.4609939360716386,
+        "categorical__material_Filter paper": -0.18652449872503998
+      },
+      "intercept": 0.2744694373465986,
+      "classification_threshold_log_odds": 0.0,
+      "probability_calibrated": false,
+      "heldout_errors": {
+        "one_sixth": 5,
+        "one_sixth_cases": 17,
+        "three_eighths": 3,
+        "three_eighths_cases": 12
+      },
+      "domain_note": "Training data cover 0.0833-0.375 g, 15.0-21.0% O2, 56.5-101.3 kPa, 0.05-0.125 mm, and ACRYPLEN or Filter paper. Marginal input-range checks do not establish that a combination is validated.",
+      "limits": [
+        "Exploratory classification score, not a calibrated probability or fire-safety risk.",
+        "Predicts spread versus extinction only for already-burning thin samples.",
+        "Does not predict ignition, heat release, flame size, or habitat safety.",
+        "FM2 Synergy Pro fabric and 25-37% O2 are outside the training domain."
+      ],
+      "blind_evaluation": {
+        "split": "Leave-1/6g-Out",
+        "heldout_gravity_label": "1/6",
+        "test_cases": 17,
+        "test_flights": 7,
+        "classification_errors": 5,
+        "flight_groups_disjoint": true,
+        "training_note": "All cases at the held-out gravity level are excluded from this fit."
+      }
+    },
+    "Leave-3/8g-Out": {
+      "model": "standardized logistic regression",
+      "target": "spread among already-burning thin samples",
+      "training_rows": 26,
+      "training_flights": 12,
+      "outcome_source": "estimated labels digitized from Takahashi et al. Fig. 7 and joined to S1 conditions",
+      "training_label_counts": {
+        "spread": 17,
+        "extinct": 9
+      },
+      "numeric_features": {
+        "gravity_g": {
+          "mean": 0.17629230769230764,
+          "scale": 0.0742676341301508,
+          "min": 0.0833,
+          "max": 0.3333
+        },
+        "o2_pct": {
+          "mean": 17.23076923076923,
+          "scale": 2.0438969623979113,
+          "min": 15.0,
+          "max": 21.0
+        },
+        "pressure_kPa": {
+          "mean": 77.17692307692309,
+          "scale": 22.33362948374401,
+          "min": 56.5,
+          "max": 101.3
+        },
+        "thickness_mm": {
+          "mean": 0.10384615384615384,
+          "scale": 0.0327375252902564,
+          "min": 0.05,
+          "max": 0.125
+        }
+      },
+      "categorical_features": {
+        "material": [
+          "ACRYPLEN",
+          "Filter paper"
+        ]
+      },
+      "coefficients": {
+        "numeric__gravity_g": 0.22544230157016065,
+        "numeric__o2_pct": 1.5235542929152268,
+        "numeric__pressure_kPa": 0.8320672364473629,
+        "numeric__thickness_mm": -0.19249842194124175,
+        "categorical__material_ACRYPLEN": 0.8406613021041537,
+        "categorical__material_Filter paper": -0.5213070910273919
+      },
+      "intercept": 0.31935421107676093,
+      "classification_threshold_log_odds": 0.0,
+      "probability_calibrated": false,
+      "heldout_errors": {
+        "one_sixth": 5,
+        "one_sixth_cases": 17,
+        "three_eighths": 3,
+        "three_eighths_cases": 12
+      },
+      "domain_note": "Training data cover 0.0833-0.3333 g, 15.0-21.0% O2, 56.5-101.3 kPa, 0.05-0.125 mm, and ACRYPLEN or Filter paper. Marginal input-range checks do not establish that a combination is validated.",
+      "limits": [
+        "Exploratory classification score, not a calibrated probability or fire-safety risk.",
+        "Predicts spread versus extinction only for already-burning thin samples.",
+        "Does not predict ignition, heat release, flame size, or habitat safety.",
+        "FM2 Synergy Pro fabric and 25-37% O2 are outside the training domain."
+      ],
+      "blind_evaluation": {
+        "split": "Leave-3/8g-Out",
+        "heldout_gravity_label": "3/8",
+        "test_cases": 12,
+        "test_flights": 6,
+        "classification_errors": 3,
+        "flight_groups_disjoint": true,
+        "training_note": "All cases at the held-out gravity level are excluded from this fit."
+      }
+    }
+  },
+  "manual_six_holdout_model": {
+    "model": "standardized logistic regression",
+    "target": "spread among already-burning thin samples",
+    "training_rows": 32,
+    "training_flights": 15,
+    "outcome_source": "estimated labels digitized from Takahashi et al. Fig. 7 and joined to S1 conditions",
+    "training_label_counts": {
+      "spread": 21,
+      "extinct": 11
+    },
+    "numeric_features": {
+      "gravity_g": {
+        "mean": 0.23438749999999997,
+        "scale": 0.10660317405570062,
+        "min": 0.0833,
+        "max": 0.375
+      },
+      "o2_pct": {
+        "mean": 17.875,
+        "scale": 2.341874249399399,
+        "min": 15.0,
+        "max": 21.0
+      },
+      "pressure_kPa": {
+        "mean": 74.7,
+        "scale": 22.002727103702394,
+        "min": 56.5,
+        "max": 101.3
+      },
+      "thickness_mm": {
+        "mean": 0.10718749999999999,
+        "scale": 0.030335043163806443,
+        "min": 0.05,
+        "max": 0.125
+      }
+    },
+    "categorical_features": {
+      "material": [
+        "ACRYPLEN",
+        "Filter paper"
+      ]
+    },
+    "coefficients": {
+      "numeric__gravity_g": -0.08147227806399293,
+      "numeric__o2_pct": 1.6644913179932095,
+      "numeric__pressure_kPa": 0.8482672971626786,
+      "numeric__thickness_mm": 0.136579483718466,
+      "categorical__material_ACRYPLEN": 0.9310067795215355,
+      "categorical__material_Filter paper": -0.40476297912366355
+    },
+    "intercept": 0.5262438003978722,
+    "classification_threshold_log_odds": 0.0,
+    "probability_calibrated": false,
+    "heldout_errors": {
+      "one_sixth": 5,
+      "one_sixth_cases": 17,
+      "three_eighths": 3,
+      "three_eighths_cases": 12
+    },
+    "domain_note": "Training data cover 0.0833-0.375 g, 15.0-21.0% O2, 56.5-101.3 kPa, 0.05-0.125 mm, and ACRYPLEN or Filter paper. Marginal input-range checks do not establish that a combination is validated.",
+    "limits": [
+      "Exploratory classification score, not a calibrated probability or fire-safety risk.",
+      "Predicts spread versus extinction only for already-burning thin samples.",
+      "Does not predict ignition, heat release, flame size, or habitat safety.",
+      "FM2 Synergy Pro fabric and 25-37% O2 are outside the training domain."
+    ],
+    "blind_evaluation": {
+      "split": "Manual-32-6",
+      "selection_seed": 20261114,
+      "selection_method": "Select three eligible two-case flight groups with a fixed seed; outcome balance is not used.",
+      "test_cases": 6,
+      "test_flights": 3,
+      "heldout_flights": [
+        "1-6",
+        "2-10",
+        "2-6"
+      ],
+      "flight_groups_disjoint": true,
+      "training_note": "All cases from the three selected flight groups are excluded from this fit."
+    }
+  }
+}

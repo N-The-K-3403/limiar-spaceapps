@@ -1,0 +1,15 @@
+{
+ "generated_by": "src/sync_web_data.py",
+ "live_model_sha256": "281F5C6022FADC34A43D36F802E80950542DFB36770D3F21C897AC6C6FB51058",
+ "sofie_points": {
+  "total": 39,
+  "verified": 5,
+  "estimated": 34
+ },
+ "takahashi_cases": {
+  "total": 38,
+  "spread": 24,
+  "extinct": 14,
+  "flights": 18
+ }
+}
