@@ -89,6 +89,14 @@ export async function parseSpec({ text, target, apiKey, model, debug = false }) 
   }
   const modelName = model || 'gemini-2.5-flash'
   logGemini(debug, 'parse prompt', { model: modelName, payload: body })
+  // everything the browser console needs to show what Gemini saw and answered (no API key in here; it only travels in a header)
+  const dbg = {
+    model: modelName,
+    systemPrompt: body.systemInstruction.parts[0].text,
+    userText: t,
+    generationConfig: body.generationConfig,
+  }
+  const fail = (msg) => Object.assign(new Error(msg), { debug: dbg })
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
@@ -96,16 +104,26 @@ export async function parseSpec({ text, target, apiKey, model, debug = false }) 
   })
   const j = await res.json().catch(() => ({}))
   logGemini(debug, 'parse response', { status: res.status, body: j })
-  if (!res.ok) throw new Error(j?.error?.message || `Gemini returned HTTP ${res.status}`)
+  dbg.httpStatus = res.status
+  dbg.finishReason = j?.candidates?.[0]?.finishReason ?? null
+  dbg.usage = j?.usageMetadata ?? null
+  dbg.promptFeedback = j?.promptFeedback ?? null
+  if (!res.ok) {
+    dbg.errorBody = j
+    throw fail(j?.error?.message || `Gemini returned HTTP ${res.status}`)
+  }
   const raw = j?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('')
-  if (!raw) throw new Error('Gemini returned no text (it may have been blocked).')
+  dbg.rawText = raw ?? null
+  if (!raw) throw fail(`Gemini returned no text (finishReason: ${dbg.finishReason ?? 'none'}${dbg.promptFeedback?.blockReason ? ', blocked: ' + dbg.promptFeedback.blockReason : ''}).`)
   let obj
   try {
     obj = JSON.parse(raw.replace(/^```json|```$/g, '').trim())
   } catch {
-    throw new Error('Gemini did not return valid JSON.')
+    throw fail(`Gemini did not return valid JSON (finishReason: ${dbg.finishReason ?? 'none'}; likely truncated).`)
   }
+  dbg.parsedJson = obj
   // server-side validation: unknown keys, unknown enums and out-of-range numbers never leave this function
   const s = sanitizeParsed(obj)
-  return { spec: { ...s.fields, preset: s.preset, assumptions: s.assumptions }, dropped: s.dropped }
+  dbg.sanitized = s
+  return { spec: { ...s.fields, preset: s.preset, assumptions: s.assumptions }, dropped: s.dropped, debug: dbg }
 }

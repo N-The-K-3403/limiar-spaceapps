@@ -28,13 +28,42 @@ export async function parseSpecText(text, target = 'planner') {
       body: JSON.stringify({ text: t, target }),
     })
     const j = await res.json().catch(() => ({}))
+    logParse(t, target, res.status, j)
     if (!res.ok) throw new Error(j.error || `The parser returned HTTP ${res.status}.`)
     const s = sanitizeParsed(j.spec) // second validation, on the client
+    console.info('[Limiar parse] client sanitize ->', s)
     return { mode: 'ai', fields: s.fields, preset: s.preset, assumptions: s.assumptions, dropped: [...(j.dropped || []), ...s.dropped] }
   } catch (e) {
     aiError = String(e.message || e)
+    console.warn('[Limiar parse] AI path failed, falling back to rules:', aiError)
   }
-  return { mode: 'rules', ...parseRules(t), aiError }
+  const rules = parseRules(t)
+  console.info('[Limiar parse] rules result ->', rules)
+  return { mode: 'rules', ...rules, aiError }
+}
+
+// Browser-console trace of what Gemini was sent and what it answered (the server returns it in `debug`).
+function logParse(text, target, status, j) {
+  const d = j?.debug
+  console.groupCollapsed(`[Limiar parse] HTTP ${status} "${text.slice(0, 60)}"${j?.error ? ' ERROR: ' + j.error : ''}`)
+  console.log('input text:', text, '| target:', target)
+  if (d) {
+    console.log('model:', d.model)
+    console.log('SYSTEM PROMPT sent to Gemini:\n' + d.systemPrompt)
+    console.log('USER message sent to Gemini:', d.userText)
+    console.log('generationConfig:', d.generationConfig)
+    console.log('Gemini HTTP status:', d.httpStatus, '| finishReason:', d.finishReason)
+    console.log('token usage:', d.usage)
+    if (d.promptFeedback) console.log('promptFeedback:', d.promptFeedback)
+    if (d.errorBody) console.log('Gemini error body:', d.errorBody)
+    console.log('RAW TEXT from Gemini:', d.rawText)
+    console.log('parsed JSON:', d.parsedJson)
+    console.log('server sanitize ->', d.sanitized)
+  } else {
+    console.log('(no debug payload from the server; is the deploy up to date?)', j)
+  }
+  console.log('spec returned to the form:', j?.spec, '| dropped:', j?.dropped)
+  console.groupEnd()
 }
 
 export const BRIEF_PROMPT =

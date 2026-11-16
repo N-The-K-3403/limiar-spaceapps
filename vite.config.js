@@ -20,7 +20,7 @@ function devApi(env, debug) {
         try {
           send(200, await run(JSON.parse(raw || '{}')))
         } catch (e) {
-          send(502, { error: String(e?.message || e) })
+          send(502, { error: String(e?.message || e), debug: e?.debug })
         }
       })
     })

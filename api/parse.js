@@ -17,6 +17,6 @@ export default async function handler(req, res) {
     })
     return res.status(200).json(out)
   } catch (e) {
-    return res.status(502).json({ error: String(e?.message || e) })
+    return res.status(502).json({ error: String(e?.message || e), debug: e?.debug })
   }
 }
