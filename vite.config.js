@@ -31,7 +31,7 @@ function devApi(env, debug) {
       route(server, '/api/chat', async ({ messages = [], context = null, persona = 'Neutral' }) => ({
         text: await chatReply({ messages, context, persona, ...common }),
       }))
-      route(server, '/api/parse', ({ text = '', target = 'planner' }) => parseSpec({ text, target, ...common }))
+      route(server, '/api/parse', ({ text = '', target = 'planner', current = null }) => parseSpec({ text, target, current, ...common }))
     },
   }
 }

@@ -37,7 +37,7 @@ export default function DescribeBox({ target, current, setCurrent, fields, toPat
     setBusy(true)
     setRes(null)
     try {
-      const parsed = await parseSpecText(text, target)
+      const parsed = await parseSpecText(text, target, current)
       const { patch, notes } = toPatch(parsed, current)
       const changed = []
       const already = []

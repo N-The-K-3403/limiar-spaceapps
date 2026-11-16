@@ -50,17 +50,18 @@ export async function chatReply({ messages, context, persona, apiKey, model, deb
 }
 
 // ---- text -> experiment spec (api/parse.js). The model only READS the text into fields; it never supplies numbers.
-const PARSE_SYSTEM = `You convert a short plain-English description of a combustion experiment into JSON fields. You are a reader, not an expert.
+const PARSE_SYSTEM = `You convert a short plain-English description of a combustion experiment into JSON fields. The request can be explicit ("30% oxygen"), subjective ("lower gravity"), or relative to the form's current state ("try another material", "same but on Mars", "make it harsher"). Students often type very short or vague requests: always make a sensible concrete choice instead of giving up. Return an empty object ONLY if the request has nothing to do with the experiment.
 
 Rules:
-1. Include a field ONLY if the text states it, or names one of these fixed references: Moon = 0.165 g, Mars = 0.378 g, microgravity / zero-g / weightless = 0 g, Earth = 1 g, air = 21 % O2, 1 atm = 101.325 kPa.
-2. Do not invent values the text says nothing about. If a field is not stated or implied, OMIT the key.
+1. Include a field when the request states it, names one of these fixed references, or clearly asks for a change (see 2b and 2c). Fixed references: Moon = 0.165 g, Mars = 0.378 g, microgravity / zero-g / weightless = 0 g, Earth = 1 g, air = 21 % O2, 1 atm = 101.325 kPa.
+2. Do not touch fields the request is silent about: OMIT those keys (the form keeps its current value).
 2b. SUBJECTIVE TERMS: when the text describes a field qualitatively ("lower gravity", "oxygen-rich", "slow airflow", "low pressure", "very thin", in any language), interpret it yourself and set the field to your best realistic value for a combustion experiment, using the fixed references above as anchors (e.g. partial gravity is between 0 g and 1 g; Moon 0.165 g, Mars 0.378 g). Every field you set this way MUST be explained in assumptions with the phrase you read and the value you chose, so the person can check it.
+2c. RELATIVE / VAGUE REQUESTS: when the form already has values you receive them as CURRENT FORM. For requests like "try another material", "a different fuel", "more oxygen", "harsher conditions", "same on Mars", decide a concrete change yourself: choose a value DIFFERENT from the current one that is valid for the schema (material_class must be one enum value and different from the current material), and OMIT everything that should stay as is. Say what you changed and why in assumptions.
 3. Convert units: psi x 6.894757 -> kPa; atm x 101.325 -> kPa; mmHg or torr x 0.133322 -> kPa; um / 1000 -> mm; cm x 10 -> mm; m/s x 100 -> cm/s; mm/s / 10 -> cm/s. A fraction such as 1/6 g is 0.1667 g.
 4. material_class: pmma_thin_film (thin PMMA / acrylic film), paper_thin (filter paper), fabric (cotton, SIBAL, cloth), pmma_thick (PMMA rod, sphere, slab), liquid_droplet, polymer_smoke (smoke from a heated polymer). Omit it if the material is not one of these.
 5. question: spread, extinction (extinction limit), ignition, detection (smoke detection), suppression. Omit if unclear.
 6. preset: set it ONLY if the text names that scenario (ISS cabin, spacesuit, early Artemis habitat, lunar habitat, SoFIE-GEL). Do not copy its numbers; just name it.
-7. assumptions: at most 3 short strings, only for things you had to interpret. Never put numbers there that are not in the text.
+7. assumptions: at most 4 short strings, only for things you interpreted or chose (state the value you chose and why). Never present a chosen value as if the person had said it.
 8. Return JSON only.`
 
 const PARSE_SCHEMA = {
@@ -78,12 +79,16 @@ const PARSE_SCHEMA = {
   },
 }
 
-export async function parseSpec({ text, target, apiKey, model, debug = false }) {
+export async function parseSpec({ text, target, current = null, apiKey, model, debug = false }) {
   const t = String(text || '').trim().slice(0, 1500)
   if (!t) throw new Error('Write a description first.')
+  // the form's current values, so relative requests ("try another material") have something to be relative to
+  const KEEP = ['material_class', 'material', 'thickness_mm', 'o2_pct', 'pressure_kPa', 'gravity_g', 'flow_cms', 'question']
+  const curObj = current && typeof current === 'object' ? Object.fromEntries(KEEP.filter((k) => current[k] !== undefined && current[k] !== '' && current[k] !== null).map((k) => [k, current[k]])) : {}
+  const userMsg = Object.keys(curObj).length ? `CURRENT FORM:\n${JSON.stringify(curObj)}\n\nREQUEST:\n${t}` : t
   const body = {
     systemInstruction: { parts: [{ text: PARSE_SYSTEM + `\n\nTarget form: ${target === 'estimator' ? 'estimator scenario' : 'experiment planner'}.` }] },
-    contents: [{ role: 'user', parts: [{ text: t }] }],
+    contents: [{ role: 'user', parts: [{ text: userMsg }] }],
     // thinkingBudget 0: on 2.5 models the hidden thinking tokens count against maxOutputTokens and can truncate the JSON
     generationConfig: { temperature: 0, maxOutputTokens: 800, thinkingConfig: { thinkingBudget: 0 }, responseMimeType: 'application/json', responseSchema: PARSE_SCHEMA },
   }
@@ -93,7 +98,7 @@ export async function parseSpec({ text, target, apiKey, model, debug = false }) 
   const dbg = {
     model: modelName,
     systemPrompt: body.systemInstruction.parts[0].text,
-    userText: t,
+    userText: userMsg,
     generationConfig: body.generationConfig,
   }
   const fail = (msg) => Object.assign(new Error(msg), { debug: dbg })

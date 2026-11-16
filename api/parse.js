@@ -7,10 +7,11 @@ export default async function handler(req, res) {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return res.status(503).json({ error: 'The assistant is not connected: GEMINI_API_KEY is not set on the server.' })
   try {
-    const { text = '', target = 'planner' } = req.body || {}
+    const { text = '', target = 'planner', current = null } = req.body || {}
     const out = await parseSpec({
       text,
       target,
+      current,
       apiKey,
       model: process.env.GEMINI_MODEL || undefined,
       debug: process.env.GEMINI_DEBUG === 'true',

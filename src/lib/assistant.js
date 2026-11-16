@@ -17,7 +17,7 @@ export async function askAssistant({ messages, context, persona }) {
 // Text -> spec fields. Tries Gemini through /api/parse; if that fails for any reason (no key, rate limit, offline) it falls back to
 // the deterministic rules in nlspec.js. Both paths pass through sanitizeParsed, so nothing unvalidated reaches the form.
 // Returns { mode: 'ai' | 'rules', fields, preset, assumptions, dropped, aiError? }.
-export async function parseSpecText(text, target = 'planner') {
+export async function parseSpecText(text, target = 'planner', current = null) {
   const t = String(text || '').trim()
   if (!t) throw new Error('Write a description first.')
   let aiError = null
@@ -25,7 +25,7 @@ export async function parseSpecText(text, target = 'planner') {
     const res = await fetch(import.meta.env.BASE_URL + 'api/parse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: t, target }),
+      body: JSON.stringify({ text: t, target, current }),
     })
     const j = await res.json().catch(() => ({}))
     logParse(t, target, res.status, j)
