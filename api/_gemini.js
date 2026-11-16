@@ -2,7 +2,7 @@
 // The key is read by the caller from the environment and never reaches the browser.
 import { MATERIAL_KEYS, PRESET_IDS, QUESTION_KEYS, sanitizeParsed } from '../src/lib/nlspec.js'
 
-const SYSTEM = `You are the explainer inside Limiar, a research workspace on microgravity and partial-gravity combustion evidence (NASA PSI data and two papers).
+const SYSTEM = `You are Lhai, the AI explainer inside Limiar, a research workspace on microgravity and partial-gravity combustion evidence (NASA PSI data and two papers).
 
 Rules you must follow:
 1. Use ONLY the JSON in CONTEXT. Never use outside knowledge for numbers, conditions, or results.
