@@ -4,7 +4,7 @@ import { chatReply, parseSpec } from './api/_gemini.js'
 
 // Dev-only twins of api/chat.js and api/parse.js so `npm run dev` has a working assistant and describe box.
 // Put GEMINI_API_KEY=... in web/.env.local (gitignored). It is read here, in Node, and never sent to the page.
-function devApi(env) {
+function devApi(env, debug) {
   const route = (server, path, run) =>
     server.middlewares.use(path, (req, res) => {
       const send = (code, obj) => {
@@ -24,7 +24,7 @@ function devApi(env) {
         }
       })
     })
-  const common = { apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL || undefined }
+  const common = { apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL || undefined, debug }
   return {
     name: 'dev-api',
     configureServer(server) {
@@ -38,5 +38,6 @@ function devApi(env) {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  return { plugins: [react(), devApi(env)] }
+  const debug = mode !== 'production' || env.GEMINI_DEBUG === 'true'
+  return { plugins: [react(), devApi(env, debug)] }
 })

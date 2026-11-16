@@ -1,6 +1,6 @@
 // Shared by the Vercel function (api/chat.js) and the Vite dev middleware (vite.config.js).
 // The key is read by the caller from the environment and never reaches the browser.
-import { MATERIAL_KEYS, PRESET_IDS, QUESTION_KEYS, sanitizeParsed } from '../src/lib/nlspec.js'
+import { MATERIAL_KEYS, PRESET_IDS, QUESTION_KEYS, sanitizeParsed, glossaryPrompt } from '../src/lib/nlspec.js'
 
 const SYSTEM = `You are Lhai, the AI explainer inside Limiar, a research workspace on microgravity and partial-gravity combustion evidence (NASA PSI data and two papers).
 
@@ -18,7 +18,11 @@ Rules you must follow:
 
 const clip = (s, n) => (s.length > n ? s.slice(0, n) + '\n[context truncated]' : s)
 
-export async function chatReply({ messages, context, persona, apiKey, model }) {
+function logGemini(debug, label, value) {
+  if (debug) console.info(`[Gemini] ${label}\n${JSON.stringify(value, null, 2)}`)
+}
+
+export async function chatReply({ messages, context, persona, apiKey, model, debug = false }) {
   if (!Array.isArray(messages) || !messages.length) throw new Error('No messages.')
   const ctx = clip(JSON.stringify(context ?? {}, null, 1), 40000)
   const contents = messages.slice(-12).map((m) => ({
@@ -30,12 +34,15 @@ export async function chatReply({ messages, context, persona, apiKey, model }) {
     contents,
     generationConfig: { temperature: 0.2, maxOutputTokens: 1100 },
   }
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-2.5-flash'}:generateContent`, {
+  const modelName = model || 'gemini-2.5-flash'
+  logGemini(debug, 'chat prompt', { model: modelName, payload: body })
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     body: JSON.stringify(body),
   })
   const j = await res.json().catch(() => ({}))
+  logGemini(debug, 'chat response', { status: res.status, body: j })
   if (!res.ok) throw new Error(j?.error?.message || `Gemini returned HTTP ${res.status}`)
   const text = j?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('')
   if (!text) throw new Error('Gemini returned no text (it may have been blocked).')
@@ -48,6 +55,8 @@ const PARSE_SYSTEM = `You convert a short plain-English description of a combust
 Rules:
 1. Include a field ONLY if the text states it, or names one of these fixed references: Moon = 0.165 g, Mars = 0.378 g, microgravity / zero-g / weightless = 0 g, Earth = 1 g, air = 21 % O2, 1 atm = 101.325 kPa.
 2. Never guess, estimate, or infer a number from context. If a value is not stated, OMIT the key.
+2b. QUALITATIVE TERMS: if the text uses one of the phrases below (or a clear synonym, in any language, e.g. "gravidade reduzida"), set that field to the value listed and add one short string to assumptions saying which phrase you read and that it was interpreted. Use ONLY these values; any other vague word ("high oxygen", "slow airflow", "low pressure") stays omitted.
+${glossaryPrompt()}
 3. Convert units: psi x 6.894757 -> kPa; atm x 101.325 -> kPa; mmHg or torr x 0.133322 -> kPa; um / 1000 -> mm; cm x 10 -> mm; m/s x 100 -> cm/s; mm/s / 10 -> cm/s. A fraction such as 1/6 g is 0.1667 g.
 4. material_class: pmma_thin_film (thin PMMA / acrylic film), paper_thin (filter paper), fabric (cotton, SIBAL, cloth), pmma_thick (PMMA rod, sphere, slab), liquid_droplet, polymer_smoke (smoke from a heated polymer). Omit it if the material is not one of these.
 5. question: spread, extinction (extinction limit), ignition, detection (smoke detection), suppression. Omit if unclear.
@@ -70,20 +79,24 @@ const PARSE_SCHEMA = {
   },
 }
 
-export async function parseSpec({ text, target, apiKey, model }) {
+export async function parseSpec({ text, target, apiKey, model, debug = false }) {
   const t = String(text || '').trim().slice(0, 1500)
   if (!t) throw new Error('Write a description first.')
   const body = {
     systemInstruction: { parts: [{ text: PARSE_SYSTEM + `\n\nTarget form: ${target === 'estimator' ? 'estimator scenario' : 'experiment planner'}.` }] },
     contents: [{ role: 'user', parts: [{ text: t }] }],
-    generationConfig: { temperature: 0, maxOutputTokens: 500, responseMimeType: 'application/json', responseSchema: PARSE_SCHEMA },
+    // thinkingBudget 0: on 2.5 models the hidden thinking tokens count against maxOutputTokens and can truncate the JSON
+    generationConfig: { temperature: 0, maxOutputTokens: 800, thinkingConfig: { thinkingBudget: 0 }, responseMimeType: 'application/json', responseSchema: PARSE_SCHEMA },
   }
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-2.5-flash'}:generateContent`, {
+  const modelName = model || 'gemini-2.5-flash'
+  logGemini(debug, 'parse prompt', { model: modelName, payload: body })
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     body: JSON.stringify(body),
   })
   const j = await res.json().catch(() => ({}))
+  logGemini(debug, 'parse response', { status: res.status, body: j })
   if (!res.ok) throw new Error(j?.error?.message || `Gemini returned HTTP ${res.status}`)
   const raw = j?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('')
   if (!raw) throw new Error('Gemini returned no text (it may have been blocked).')

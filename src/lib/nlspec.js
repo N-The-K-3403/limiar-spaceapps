@@ -13,6 +13,30 @@ export const PRESET_IDS = ['SC_MOON_CHALLENGE', 'SC_MOON_EARLY', 'SC_ISS_CABIN',
 // same defaults as MATERIALS[].thickness in src/lib/plan.js (kept here so the server can use this file)
 export const DEFAULT_THICKNESS = { pmma_thin_film: 0.125, paper_thin: 0.12, fabric: 0.3, pmma_thick: 40, liquid_droplet: 1, polymer_smoke: 1 }
 
+// Qualitative phrases with a documented, fixed reading. Single source of truth: the rules below AND the Gemini prompt use it.
+// Hard rule 1 still holds: the value comes from THIS table, never from the model's own judgement, and every use is
+// reported as an assumption so the person checks it. Vague words that are not listed here ("high oxygen") stay unset.
+export const GLOSSARY = [
+  {
+    key: 'gravity_g',
+    value: 0.165,
+    words: 'low gravity, lower gravity, reduced gravity, partial gravity, low-g, hypogravity',
+    re: /\b(?:low(?:er)?|reduced|partial|decreased|weak(?:er)?)[- ]?g(?:ravity)?\b|\bhypo-?gravity\b|\bgravity (?:is |was )?(?:lower|reduced|low)\b/,
+    note: (m) => `"${m}" has no fixed value; read as 0.165 g (lunar gravity, the project's partial-gravity reference). Check it.`,
+  },
+  {
+    key: 'flow_cms',
+    value: 0,
+    words: 'no airflow, still air, quiescent, stagnant air, no forced flow, no ventilation',
+    re: /\bno (?:forced )?(?:air)?flow\b|\bstill air\b|\bquiescent\b|\bstagnant\b|\bno ventilation\b/,
+    note: (m) => `"${m}" read as 0 cm/s airflow.`,
+  },
+]
+
+export function glossaryPrompt() {
+  return GLOSSARY.map((g) => `- ${g.key} = ${g.value} for: ${g.words}`).join('\n')
+}
+
 const NUM_KEYS = ['thickness_mm', 'o2_pct', 'pressure_kPa', 'gravity_g', 'flow_cms']
 const RANGE = { thickness_mm: [0.001, 1000], o2_pct: [0, 100], pressure_kPa: [0.1, 1000], gravity_g: [0, 3], flow_cms: [0, 1000] }
 const NAME = { thickness_mm: 'Thickness', o2_pct: 'Oxygen', pressure_kPa: 'Pressure', gravity_g: 'Gravity', flow_cms: 'Airflow' }
@@ -86,10 +110,24 @@ export function parseRules(text) {
   else if (/\bmoon\b|lunar/.test(low)) f.gravity_g = 0.165
   else if (/\bmars\b|martian/.test(low)) f.gravity_g = 0.378
   else if (/earth gravity|normal gravity|terrestrial|ground test/.test(low)) f.gravity_g = 1
+  else {
+    const g = GLOSSARY[0].re.exec(low)
+    if (g) {
+      f.gravity_g = GLOSSARY[0].value
+      notes.push(GLOSSARY[0].note(g[0]))
+    }
+  }
 
   // airflow (cm/s, m/s, mm/s) and thickness (mm, um, cm)
   const fm = low.match(new RegExp(NUM + '\\s*(cm|mm|m)\\s*\\/\\s*s\\b'))
   if (fm) f.flow_cms = fm[2] === 'cm' ? toN(fm[1]) : fm[2] === 'm' ? toN(fm[1]) * 100 : toN(fm[1]) / 10
+  else {
+    const g = GLOSSARY[1].re.exec(low)
+    if (g) {
+      f.flow_cms = GLOSSARY[1].value
+      notes.push(GLOSSARY[1].note(g[0]))
+    }
+  }
   const tm = low.match(new RegExp(NUM + '\\s*(mm|um|microns?|micrometers?|cm)\\b(?!\\s*\\/)'))
   if (tm) {
     const v = toN(tm[1])
