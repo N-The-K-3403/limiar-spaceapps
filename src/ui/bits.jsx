@@ -1,5 +1,6 @@
 import { PROV_LABEL } from '../graph/defs.js'
 import Icon from './icons.jsx'
+import DecimalInput from './DecimalInput.jsx'
 
 export const provKey = (p) => (!p ? 'unreviewed' : String(p).startsWith('verified') ? 'verified' : String(p).startsWith('estimated') ? 'estimated' : 'unreviewed')
 
@@ -20,6 +21,40 @@ export function AxisChip({ a }) {
     <span className={'ax ' + a.status} title={a.detail}>
       {a.label} <Icon name={SYM[a.status]} size={12} />
     </span>
+  )
+}
+
+// Six-axis glyph next to the match percentage: one vertex per axis, in the same order as the chips.
+// filled = inside, half = close, hollow = outside, dashed = not stated. Axes the plan did not use (no airflow asked) are left out.
+const HEX_ORDER = ['fuel', 'o2', 'p', 'g', 'flow', 'outcome']
+const HEX_TXT = { inside: 'inside', near: 'close', outside: 'outside', unknown: 'not stated' }
+export function AxisHex({ axes, size = 30 }) {
+  const by = {}
+  for (const a of axes || []) by[a.key] = a
+  const c = 15
+  const R = 10.5
+  const pt = (i) => {
+    const t = ((-90 + 60 * i) * Math.PI) / 180
+    return [c + R * Math.cos(t), c + R * Math.sin(t)]
+  }
+  const outline = HEX_ORDER.map((_, i) => pt(i).map((n) => n.toFixed(1)).join(',')).join(' ')
+  const tip = HEX_ORDER.filter((k) => by[k]).map((k) => `${by[k].label}: ${HEX_TXT[by[k].status]}`).join(' \u00b7 ')
+  return (
+    <svg className="hx" width={size} height={size} viewBox="0 0 30 30" role="img" aria-label={'Match by axis. ' + tip}>
+      <title>{tip}</title>
+      <polygon points={outline} className="hx-line" />
+      {HEX_ORDER.map((k, i) => {
+        const a = by[k]
+        if (!a) return null
+        const [x, y] = pt(i)
+        return (
+          <g key={k} className={'hx-v ' + a.status}>
+            <circle cx={x} cy={y} r="3.3" className={a.status === 'inside' ? 'hx-fill' : 'hx-ring'} />
+            {a.status === 'near' && <path d={`M${x.toFixed(1)},${(y - 3.3).toFixed(1)} A3.3,3.3 0 0 0 ${x.toFixed(1)},${(y + 3.3).toFixed(1)} Z`} className="hx-half" />}
+          </g>
+        )
+      })}
+    </svg>
   )
 }
 
@@ -70,7 +105,7 @@ export function NumField({ label, unit, value, onChange, min, max, step = 'any',
     <label className="field">
       <span>{label}</span>
       <div className="unit">
-        <input type="number" inputMode="decimal" min={min} max={max} step={step} value={value ?? ''} placeholder={placeholder} onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))} />
+        <DecimalInput value={value ?? ''} placeholder={placeholder} aria-label={label} onChange={onChange} />
         {unit && <i>{unit}</i>}
       </div>
       {hint && <small className="note">{hint}</small>}

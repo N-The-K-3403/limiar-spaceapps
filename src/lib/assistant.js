@@ -1,6 +1,7 @@
 // Client for /api/chat plus a deterministic brief that needs no AI. Both only restate what the plan computed.
 import { Q, MAT } from './plan.js'
 import { REGIME_LABEL, regimeOfG, round } from './psi.js'
+import { parseRules, sanitizeParsed } from './nlspec.js'
 
 export async function askAssistant({ messages, context, persona }) {
   const res = await fetch(import.meta.env.BASE_URL + 'api/chat', {
@@ -11,6 +12,29 @@ export async function askAssistant({ messages, context, persona }) {
   const j = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(j.error || `The assistant returned HTTP ${res.status}.`)
   return j.text
+}
+
+// Text -> spec fields. Tries Gemini through /api/parse; if that fails for any reason (no key, rate limit, offline) it falls back to
+// the deterministic rules in nlspec.js. Both paths pass through sanitizeParsed, so nothing unvalidated reaches the form.
+// Returns { mode: 'ai' | 'rules', fields, preset, assumptions, dropped, aiError? }.
+export async function parseSpecText(text, target = 'planner') {
+  const t = String(text || '').trim()
+  if (!t) throw new Error('Write a description first.')
+  let aiError = null
+  try {
+    const res = await fetch(import.meta.env.BASE_URL + 'api/parse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: t, target }),
+    })
+    const j = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(j.error || `The parser returned HTTP ${res.status}.`)
+    const s = sanitizeParsed(j.spec) // second validation, on the client
+    return { mode: 'ai', fields: s.fields, preset: s.preset, assumptions: s.assumptions, dropped: [...(j.dropped || []), ...s.dropped] }
+  } catch (e) {
+    aiError = String(e.message || e)
+  }
+  return { mode: 'rules', ...parseRules(t), aiError }
 }
 
 export const BRIEF_PROMPT =

@@ -1,0 +1,47 @@
+{
+  "_source": "Written only from PROJECT.md and AGENTS.md of this repository. Every number below appears there. Facts from this file are cited in answers as (project brief).",
+  "project": "Flame in Freefall, NASA Space Apps 2026 challenge 'Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data'. The tool shown to the user is called Limiar.",
+  "central_question": "Given a mission scenario, what does the combustion evidence support, what do we still not know, and which test should be run next?",
+  "who_it_is_for": "A researcher or mission safety planner choosing a material or component for a cabin, rover or habitat scenario.",
+  "what_it_does": [
+    "Planner: shows which tests and papers are actually comparable to a scenario (conditions, outcome, citation, verification status), separates what is known directly from analogy or extrapolation and from no coverage, and proposes the next experiment.",
+    "Evidence: the SoFIE-GEL extinction map data points with provenance.",
+    "Estimator: runs the Takahashi-based MARGIN-Spread classifier live for material, O2, gravity, pressure and thickness and returns a class (spread or extinguish) with a raw log-odds score.",
+    "Gaps: a map of where evidence exists along oxygen, pressure, gravity and flow.",
+    "Workbench: a node graph that shows how an estimate is computed."
+  ],
+  "what_it_is_not": [
+    "It does not certify safety and does not estimate the fire risk of a lunar habitat.",
+    "It is not a universal fire predictor.",
+    "The score is not a calibrated probability, not an uncertainty interval, not a physical limiting-oxygen curve and not lunar validation.",
+    "It differs from the public FIRE-X project (a dashboard plus chatbot) by its focus: uncertainty-aware modelling and recommending the next experiment. The assistant in this tool only explains the evidence the tool already holds; it is not the product's central idea."
+  ],
+  "data_sources": [
+    "SoFIE-GEL (ISS, Combustion Integrated Rack): extinction of 4 cm PMMA spheres at 1 atm in microgravity. T'ien et al. 2025, Combustion and Flame 277, 114244: Table 2 values are verified, Fig. 8 was digitized (39 points, 27 q_c labels) and is estimated, not author data. CC BY-NC-ND: numbers are cited, the figure is not redistributed.",
+    "Takahashi et al. 2026 (Proc. Combust. Inst., DOI 10.1016/j.proci.2026.106097): partial-gravity downward spread on thin films and paper. CC BY. Outcome labels were read from Fig. 7 with AI assistance and are estimated.",
+    "Li et al. 2024 (Proc. Combust. Inst. 40): pulsation context, tables extracted.",
+    "NASA Physical Sciences Informatics (PSI): investigation metadata (for example BASS-II, Saffire, SAME, FLEX), AI-extracted and unreviewed; this tool does not use numeric conditions from it yet."
+  ],
+  "models": [
+    "SoFIE-GEL branch: a Gaussian process for the oxygen limit as a function of flow, with an uncertainty band that widens where there is no data. Valid for PMMA, 4 cm sphere, 1 atm, microgravity only.",
+    "Takahashi branch (MARGIN-Spread): a logistic regression classifier, exploratory, kept separate from the SoFIE-GEL branch."
+  ],
+  "headline_results": [
+    "Oxygen limit versus flow is described by a smooth trend, leave-one-out RMSE about 0.9 % O2; minimum of the mean curve 14.0 +- 0.14 % O2.",
+    "Scatter around the curve is largely explained by q_c: R2 0.84 to 0.93, about 1 to 1.4 % less extinction O2 for half the q_c; it survives 20 % error in q_c (an association, not proof of cause).",
+    "New flow speeds add little information; repeating the low versus high q_c contrast (about 1.1 to 1.6 cm/s) reduces the error of the effect by about 23 %.",
+    "SoFIE-GEL oxygen limit is slightly below 14 %, considerably lower than conventional tables; the ISS accumulated about 7 hours of burn time.",
+    "Takahashi held-out checks (retrospective): leaving out 1/6 g gave 12 of 17 correct, leaving out 3/8 g gave 9 of 12, and a 32/6 split of whole flights (fixed seed 20261114, so it is reproducible, but the split was chosen post-hoc) gave 5 of 6, with a small n and estimated labels. These are not external validation."
+  ],
+  "limits": [
+    "The link from SoFIE-GEL to the Moon or Mars is by analogy, not by partial-gravity data. The PSI data consulted has no new partial-gravity tests from LUCI/FM2.",
+    "Small samples, about 35 to 39 points; q_c has about 20 % uncertainty; spheres were reused about 3 times, so thermal history differs by point and confounds the result.",
+    "Fig. 8 points were read off an image (about +-0.05 % O2 and +-1 to 2 % flow), they are not the authors' data.",
+    "Do not interpolate linearly between 0 g and 1 g to predict partial gravity; the physics is non-monotonic.",
+    "Takahashi: LOC minimum near about 0.01 g; the Moon and Mars lie on the higher-velocity side; material ranking can change between bodies (PMMA versus paper).",
+    "For some inputs (for example Synergy Pro, or 25 to 37 % O2) the Estimator still computes but marks the result as extrapolation."
+  ],
+  "provenance_labels": "verified = from a paper table or text; estimated = read off a figure or produced by a script; unreviewed = AI-extracted metadata not yet checked by a human.",
+  "sdg_alignment": "SDG 9 (test planning and research infrastructure), SDG 3 (crew safety as motivation, no clinical claim), SDG 17 (citable, reusable data and methods).",
+  "ai_use": "The central idea comes from the team; AI is used for execution (code, extraction, text) and is declared in the submission. The assistant only reads the plan context and this brief; it does not search the web."
+}

@@ -3,9 +3,11 @@ import { MATERIALS, MAT, QUESTIONS, Q, defaultSpec, planContext } from '../lib/p
 import { PSI_TO_KPA, REGIME_LABEL, regimeOfG, round } from '../lib/psi.js'
 import { BRIEF_PROMPT, askAssistant, localBrief } from '../lib/assistant.js'
 import { download } from '../lib/rank.js'
-import { AxisChip, Cite, Eyebrow, Prov, Rich } from '../ui/bits.jsx'
+import { AxisChip, AxisHex, Cite, Eyebrow, Prov, Rich } from '../ui/bits.jsx'
 import Icon from '../ui/icons.jsx'
 import SliderField, { SLIDE, coverBands } from '../ui/SliderField.jsx'
+import DescribeBox from '../ui/DescribeBox.jsx'
+import { PLANNER_FIELDS, plannerPatch } from '../lib/specpatch.js'
 
 const REG = [['Microgravity', 0], ['Moon', 0.165], ['Mars', 0.378], ['Earth 1 g', 1]]
 const loPct = (z) => Math.max(2, Math.min(98, 50 + (z / 6) * 50))
@@ -32,7 +34,7 @@ function PriorRow({ it, i, onCite, kb }) {
         {it.note && <div className="sub">{it.note}</div>}
         <div className="meta">
           <Prov prov={it.prov} />
-          <span className="chip">{it.kind}</span>
+          <span className={'chip' + (it.kind === 'dataset' || it.kind === 'measured' ? ' prov' : '')}>{it.kind}</span>
           {it.axes.map((a) => (
             <AxisChip key={a.key} a={a} />
           ))}
@@ -56,7 +58,10 @@ function PriorRow({ it, i, onCite, kb }) {
         </details>
       </div>
       <div className="match">
-        <b>{Math.round(it.score * 100)}%</b>
+        <div className="match-top">
+          <AxisHex axes={it.axes} />
+          <b>{Math.round(it.score * 100)}%</b>
+        </div>
         <span>MATCH</span>
         <div className="meter"><i style={{ width: it.score * 100 + '%' }} /></div>
       </div>
@@ -64,7 +69,7 @@ function PriorRow({ it, i, onCite, kb }) {
   )
 }
 
-export default function Planner({ raw, setRaw, problems, plan, kb, ctx, presets, persona, onCite, goTab }) {
+export default function Planner({ raw, setRaw, problems, plan, kb, ctx, presets, persona, needLevel, onCite, goTab }) {
   const [brief, setBrief] = useState(null)
   const set = (k, v) => {
     setBrief(null)
@@ -78,13 +83,20 @@ export default function Planner({ raw, setRaw, problems, plan, kb, ctx, presets,
     setBrief(null)
     setRaw({ ...defaultSpec(), ...p.spec })
   }
+  // used by the describe box: same as set(), but also drops a stale written brief
+  const setFromText = (fn) => {
+    setBrief(null)
+    setRaw(fn)
+  }
 
   const writeBrief = async (useAI) => {
     if (!plan) return
     if (!useAI) return setBrief({ mode: 'local', text: localBrief(plan, kb) })
+    const lvl = (await needLevel()) || null // first-use pop-up; null = cancelled
+    if (!lvl) return
     setBrief({ mode: 'ai', busy: true })
     try {
-      const text = await askAssistant({ messages: [{ role: 'user', text: BRIEF_PROMPT }], context: planContext(plan, kb, persona), persona })
+      const text = await askAssistant({ messages: [{ role: 'user', text: BRIEF_PROMPT }], context: planContext(plan, kb, lvl), persona: lvl })
       setBrief({ mode: 'ai', text })
     } catch (e) {
       setBrief({ mode: 'error', text: String(e.message || e) })
@@ -111,6 +123,7 @@ export default function Planner({ raw, setRaw, problems, plan, kb, ctx, presets,
           <p className="lede">
             State the fuel, atmosphere and gravity. You get five cited answers: has it been done, what is missing, what to run next, what we expect, and a written brief. Where the data stops, it says so.
           </p>
+          <DescribeBox target="planner" current={raw} setCurrent={setFromText} fields={PLANNER_FIELDS} toPatch={(parsed, cur) => plannerPatch(parsed, cur, presets)} />
         </div>
         {plan && (
           <div className="glance" aria-label="Plan at a glance">
@@ -240,7 +253,7 @@ export default function Planner({ raw, setRaw, problems, plan, kb, ctx, presets,
               </Part>
 
               <Part n={2} tag="Coverage and gaps" title="What is missing?">
-                <table className="tbl">
+                <table className="tbl cov">
                   <thead>
                     <tr><th>Axis</th><th className="num">Your value</th><th>Measured sources inside</th><th>On a related fuel</th></tr>
                   </thead>

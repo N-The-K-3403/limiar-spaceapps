@@ -14,7 +14,7 @@ python src/sync_web_data.py     # refresh web/public data from the project CSVs 
 ## Deploy (Vercel)
 1. Add New Project -> import the repo.
 2. Root Directory = `web`; Framework Preset = Vite (build `npm run build`, output `dist`).
-3. Add `GEMINI_API_KEY` as an environment variable, used only by the serverless function `api/chat` (not built yet). Never put it in client code.
+3. Add `GEMINI_API_KEY` as a Vercel environment variable. The `api/chat` and `api/parse` serverless functions read it on the server; never expose it in client code or prefix it with `VITE_`.
 
 ## What exists (build 1)
 - Tabs: Estimator, Evidence, Models, Sources (working); Canvas, Investigations, Graph (placeholders).

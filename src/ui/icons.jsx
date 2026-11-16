@@ -28,6 +28,9 @@ const P = {
   sparkle: ['M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z'],
   chat: ['M4 5h16v11H9l-5 4V5z'],
   list: ['M8 6h12M8 12h12M8 18h12', 'M4 6h.01M4 12h.01M4 18h.01'],
+  plus: ['M12 5v14', 'M5 12h14'],
+  trash: ['M4 7h16', 'M9 7V4h6v3', 'M6 7l1 13h10l1-13'],
+  edit: ['M4 20h4L19 9l-4-4L4 16v4z', 'M13 7l4 4'],
 }
 
 export default function Icon({ name, size = 16, className = '', title }) {
@@ -64,4 +67,5 @@ export const TAB_ICON = {
   workbench: 'nodes',
   models: 'chip',
   sources: 'link',
+  ai: 'chat',
 }

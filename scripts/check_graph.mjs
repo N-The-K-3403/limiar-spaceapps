@@ -13,6 +13,14 @@ const ctx = makeCtx({
 console.log('retained:', ctx.retained.map((r) => `${r.ok}/${r.n} ${r.short}`).join(' | '), '| in-sample', `${ctx.inSample.ok}/${ctx.inSample.n}`)
 
 const g = RECIPES[0].build()
+const positions = Object.fromEntries(g.nodes.map((n) => [n.id, n.position]))
+if (!(positions.scn.x < positions.spr.x && positions.spr.x < positions.dom.x && positions.dom.x < positions.cht.x)) {
+  throw new Error('Recipe nodes are not laid out from scenario through model and checks to evidence.')
+}
+if (positions.dom.x !== positions.nrs.x || g.nodes.some((n) => !Number.isFinite(n.position.x) || !Number.isFinite(n.position.y))) {
+  throw new Error('Recipe auto-layout returned an invalid check-node position.')
+}
+console.log('layout: scenario < model < checks < evidence')
 const { results, edgeInfo, order } = evaluateGraph(g.nodes, g.edges, ctx)
 console.log('order:', order.join(' > '))
 for (const n of g.nodes) {

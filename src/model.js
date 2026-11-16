@@ -28,7 +28,7 @@ export function variantsOf(m) {
     },
     {
       key: 'm32',
-      label: 'Seed-selected split (32 train / 6 held out)',
+      label: 'Fixed-seed split, chosen post-hoc (32 train / 6 held out)',
       model: manual,
       heldout: (c) => manual.blind_evaluation.heldout_flights.includes(c.flight_id),
     },

@@ -55,7 +55,10 @@ export default function NodeShell({ id, type, selected, children }) {
           style={{ top: 41 }}
         />
       ))}
-      <div className="node-body">{children}</div>
+      <div className="node-body">
+        <p className="node-caption">{def.blurb}</p>
+        {children}
+      </div>
     </div>
   )
 }

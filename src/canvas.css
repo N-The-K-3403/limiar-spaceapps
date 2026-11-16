@@ -1,20 +1,20 @@
 /* Plasma and ember. Orange to yellow = heat and data. Plasma blue = structure. Ember red = alert only.
    Glow only on: the selected node, the model output, an active port, the scenario marker. */
 :root {
-  --bg: #07080b;
-  --panel: #0e1015;
-  --panel2: #12151c;
-  --line: #1d2129;
-  --line2: #2a303b;
-  --heat1: #ff7a1a;
-  --heat2: #ffb02e;
-  --heat3: #ffe08a;
-  --plasma1: #1c3dff;
-  --plasma2: #3b6bff;
-  --plasma3: #7aa2ff;
-  --ember: #ff3b30;
-  --text: #e9e6df;
-  --text2: #8c8f98;
+  --bg: #050407;
+  --panel: #151318;
+  --panel2: #1b181f;
+  --line: #2a272f;
+  --line2: #3a3640;
+  --heat1: #ff641f;
+  --heat2: #ff8a4d;
+  --heat3: #ffb4a8;
+  --plasma1: #7b6bb5;
+  --plasma2: #b3a5d8;
+  --plasma3: #d4cbee;
+  --ember: #ff5252;
+  --text: #f5f3f6;
+  --text2: #99959f;
   --sans: Inter, system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Consolas, monospace;
 }
@@ -51,7 +51,7 @@ h4 { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: v
 .lib-fam { margin-left: auto; font-size: 10px; color: var(--text2); }
 
 /* ---------- canvas ---------- */
-.canvas { grid-row: 2; position: relative; background: radial-gradient(1100px 650px at 72% 28%, rgba(28, 61, 255, 0.07), transparent 62%), var(--bg); min-width: 0; }
+.canvas { grid-row: 2; position: relative; background: radial-gradient(1100px 650px at 72% 28%, rgba(179, 165, 216, 0.07), transparent 62%), var(--bg); min-width: 0; }
 .canvas .react-flow { background: transparent; --xy-edge-stroke: transparent; }
 .canvas .react-flow__attribution { background: transparent; color: #3a3f4a; }
 .canvas .react-flow__attribution a { color: #3a3f4a; }
@@ -68,7 +68,7 @@ h4 { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: v
 .fam-output { --fam: var(--heat3); }
 
 .node { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5); color: var(--text); }
-.node.selected { border-color: var(--plasma2); box-shadow: 0 0 0 1px var(--plasma2), 0 0 26px rgba(59, 107, 255, 0.35), 0 10px 26px rgba(0, 0, 0, 0.55); }
+.node.selected { border-color: var(--plasma2); box-shadow: 0 0 0 1px var(--plasma2), 0 0 26px rgba(179, 165, 216, 0.35), 0 10px 26px rgba(0, 0, 0, 0.55); }
 .node-head { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-bottom: 1px solid var(--line); border-radius: 9px 9px 0 0; box-shadow: inset 0 2px 0 var(--fam); }
 .node-head .fam { font: 500 9px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text2); }
 .node-head .title { font-weight: 600; font-size: 12.5px; }
@@ -91,7 +91,7 @@ h4 { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: v
 /* inputs */
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
 select, input[type='text'] { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line2); border-radius: 6px; padding: 5px 7px; font: 12px var(--sans); min-width: 0; }
-select:focus, input:focus { outline: none; border-color: var(--plasma2); box-shadow: 0 0 0 2px rgba(59, 107, 255, 0.25); }
+select:focus, input:focus { outline: none; border-color: var(--plasma2); box-shadow: 0 0 0 2px rgba(179, 165, 216, 0.25); }
 .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
 .numfield { display: flex; flex-direction: column; gap: 3px; }
 .numfield.wide { margin-top: 2px; }
@@ -102,7 +102,7 @@ select:focus, input:focus { outline: none; border-color: var(--plasma2); box-sha
 /* result (the model output: the one incandescent element of the node) */
 .result { border: 1px solid var(--line2); border-radius: 8px; padding: 10px 12px 9px; background: var(--panel2); }
 .result.spread { border-color: rgba(255, 122, 26, 0.55); box-shadow: 0 0 24px rgba(255, 122, 26, 0.16); }
-.result.ext { border-color: rgba(59, 107, 255, 0.6); box-shadow: 0 0 24px rgba(59, 107, 255, 0.2); }
+.result.ext { border-color: rgba(179, 165, 216, 0.6); box-shadow: 0 0 24px rgba(179, 165, 216, 0.2); }
 .result.dim { border-style: dashed; border-color: var(--line2); box-shadow: none; opacity: 0.8; }
 .result-label { font: 500 9px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text2); }
 .result-class { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin: 2px 0 10px; }
@@ -128,7 +128,7 @@ select:focus, input:focus { outline: none; border-color: var(--plasma2); box-sha
 .dbar-label { color: var(--text2); }
 .dbar-track { position: relative; height: 14px; }
 .dbar-track::before { content: ''; position: absolute; left: 0; right: 0; top: 6px; height: 2px; background: var(--line); }
-.dbar-band { position: absolute; top: 4px; height: 6px; border-radius: 3px; background: rgba(59, 107, 255, 0.55); box-shadow: 0 0 6px rgba(59, 107, 255, 0.35); }
+.dbar-band { position: absolute; top: 4px; height: 6px; border-radius: 3px; background: rgba(179, 165, 216, 0.55); box-shadow: 0 0 6px rgba(179, 165, 216, 0.35); }
 .dbar-mark { position: absolute; top: 1px; width: 2px; height: 12px; margin-left: -1px; background: var(--text); border-radius: 1px; }
 .dbar-mark.out { width: 9px; height: 9px; top: 2.5px; margin-left: -4.5px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 8px var(--ember); }
 .dbar-val { text-align: right; font-size: 11px; }
@@ -153,7 +153,7 @@ table.mini tr.outside td.st, table.mini tr.outside td:nth-child(2) { color: var(
 .chart { width: 100%; height: auto; display: block; }
 .chart text { fill: var(--text2); font: 9.5px var(--mono); }
 .chart .gridline { stroke: var(--line); stroke-width: 1; }
-.chart .trained { fill: rgba(28, 61, 255, 0.12); stroke: var(--plasma2); stroke-width: 1; stroke-dasharray: 4 3; }
+.chart .trained { fill: rgba(179, 165, 216, 0.12); stroke: var(--plasma2); stroke-width: 1; stroke-dasharray: 4 3; }
 .chart .trained-label { fill: var(--plasma3); font-size: 9px; }
 .chart .case { fill: none; stroke-width: 1.7; }
 .chart .case.spread { stroke: var(--heat1); }

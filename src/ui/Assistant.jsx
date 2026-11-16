@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { askAssistant } from '../lib/assistant.js'
-import { Rich } from './bits.jsx'
+import ChatMessage from './ChatMessage.jsx'
 
 const SUGGEST = {
   planner: ['Explain this plan in plain words', 'Which gap matters most, and why?', 'What would change the prediction?'],
@@ -11,7 +11,7 @@ const SUGGEST = {
   default: ['What is still unknown for partial gravity?', 'Explain this page'],
 }
 
-export default function Assistant({ open, onClose, persona, tab, kb, getContext, onCite }) {
+export default function Assistant({ open, onClose, persona, level, openLevel, needLevel, tab, kb, getContext, onCite }) {
   const [msgs, setMsgs] = useState([])
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -23,12 +23,14 @@ export default function Assistant({ open, onClose, persona, tab, kb, getContext,
   const send = async (t) => {
     const q = (t ?? text).trim()
     if (!q || busy) return
+    const lvl = await needLevel() // first-use pop-up; null = cancelled
+    if (!lvl) return
     const next = [...msgs, { role: 'user', text: q }]
     setMsgs(next)
     setText('')
     setBusy(true)
     try {
-      const reply = await askAssistant({ messages: next.filter((m) => m.role !== 'error').map(({ role, text }) => ({ role, text })), context: getContext(), persona })
+      const reply = await askAssistant({ messages: next.filter((m) => m.role !== 'error').map(({ role, text }) => ({ role, text })), context: getContext(), persona: lvl })
       setMsgs([...next, { role: 'model', text: reply }])
     } catch (e) {
       setMsgs([...next, { role: 'error', text: String(e.message || e) }])
@@ -42,7 +44,8 @@ export default function Assistant({ open, onClose, persona, tab, kb, getContext,
     <aside className={'drawer' + (open ? ' open' : '')} aria-label="Ask Limiar assistant" inert={!open}>
       <div className="drawer-h">
         <div className="card-h" style={{ marginBottom: 0 }}>
-          <span className="eyebrow">Assistant · {persona}</span>
+          <span className="eyebrow">Assistant</span>
+          <button className="btn sm ghost" onClick={openLevel} title="Change how the assistant explains things">Level: {level || 'Neutral'}</button>
           <span className="grow" />
           <button className="btn sm ghost" onClick={onClose}>Close</button>
         </div>
@@ -57,18 +60,7 @@ export default function Assistant({ open, onClose, persona, tab, kb, getContext,
             ))}
           </div>
         )}
-        {msgs.map((m, i) => (
-          <div key={i} className={'msg ' + (m.role === 'user' ? 'me' : '')}>
-            <div className="who">{m.role === 'user' ? 'You' : m.role === 'error' ? 'Not available' : 'Limiar'}</div>
-            {m.role === 'user' ? (
-              <div className="bubble">{m.text}</div>
-            ) : m.role === 'error' ? (
-              <div className="callout bad">{m.text}</div>
-            ) : (
-              <div className="prose"><Rich text={m.text} kb={kb} onCite={onCite} /></div>
-            )}
-          </div>
-        ))}
+        {msgs.map((m, i) => <ChatMessage key={i} m={m} kb={kb} onCite={onCite} />)}
         {busy && <div className="note"><span className="spin" /> thinking…</div>}
         <div ref={end} />
       </div>

@@ -17,12 +17,12 @@ export default function WireEdge({ id, sourceX, sourceY, targetX, targetY, sourc
     <g className={cls}>
       <defs>
         <linearGradient id={gid} gradientUnits="userSpaceOnUse" x1={sourceX} y1={sourceY} x2={targetX} y2={targetY}>
-          <stop offset="0%" stopColor="#3b6bff" />
+          <stop offset="0%" stopColor="var(--plasma2)" />
           <stop offset="100%" stopColor="#ffb02e" />
         </linearGradient>
       </defs>
       {info.prov === 'verified' && <path d={path} className="wire-glow" stroke={`url(#${gid})`} />}
-      <path d={path} className="wire-line" stroke={info.prov === 'input' ? '#3b6bff' : `url(#${gid})`} />
+      <path d={path} className="wire-line" stroke={info.prov === 'input' ? 'var(--plasma2)' : `url(#${gid})`} />
       <path d={path} className="wire-hit" />
       {info.live && (
         <circle r="2.6" className="pulse">

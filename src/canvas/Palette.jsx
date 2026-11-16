@@ -8,6 +8,7 @@ export default function Palette() {
   const addNode = useGraph((s) => s.addNode)
   const recipeId = useGraph((s) => s.recipeId)
   const loadRecipe = useGraph((s) => s.loadRecipe)
+  const activeRecipe = RECIPES.find((r) => r.id === recipeId)
 
   const add = (type) => {
     const el = document.querySelector('.canvas .react-flow')
@@ -31,8 +32,13 @@ export default function Palette() {
           {!r.build && <em>soon</em>}
         </button>
       ))}
+      {activeRecipe && (
+        <button className="recipe-reset" onClick={() => loadRecipe(activeRecipe.id)}>
+          Reset to {activeRecipe.title}
+        </button>
+      )}
       <h4>Nodes</h4>
-      <p className="sm">Click to drop one on the board. Drag from a port to a matching port to wire it.</p>
+      <p className="sm">Click to add a node. Inputs are on the left; connect ports with matching types.</p>
       {Object.entries(DEFS).map(([type, d]) => (
         <button key={type} className={`lib fam-${d.family}`} onClick={() => add(type)} title={d.blurb}>
           <span className="lib-dot" />

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Background, BackgroundVariant, Controls, ReactFlow, useReactFlow } from '@xyflow/react'
 import { useGraph } from '../graph/store.js'
 import { nodeTypes } from './nodes.jsx'
@@ -18,9 +18,14 @@ export default function Canvas() {
   const ref = useRef(null)
 
   useEffect(() => {
-    const t = setTimeout(() => fitView({ padding: 0.12, duration: 350 }), 60)
+    if (fitTick === 0) return
+    const t = setTimeout(() => fitView({ padding: 0.12, duration: 350 }), 120)
     return () => clearTimeout(t)
   }, [fitTick, fitView])
+
+  const onInit = useCallback((instance) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => instance.fitView({ padding: 0.12, duration: 350 })))
+  }, [])
 
   // brighter grid dots near the cursor: set CSS variables directly, no React re-render
   const onMove = (e) => {
@@ -40,16 +45,17 @@ export default function Canvas() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         isValidConnection={isValidConnection}
+        onInit={onInit}
         fitView
         fitViewOptions={{ padding: 0.12 }}
-        minZoom={0.25}
+        minZoom={0.15}
         maxZoom={1.6}
         connectionRadius={28}
         deleteKeyCode={['Backspace', 'Delete']}
         colorMode="dark"
       >
-        <Background id="dots" variant={BackgroundVariant.Dots} gap={22} size={1.3} color="#1c212b" />
-        <Background id="hot" className="bg-hot" variant={BackgroundVariant.Dots} gap={22} size={1.6} color="#ffb02e" />
+        <Background id="dots" variant={BackgroundVariant.Dots} gap={22} size={1.3} color="var(--line2)" />
+        <Background id="hot" className="bg-hot" variant={BackgroundVariant.Dots} gap={22} size={1.6} color="var(--heat2)" />
         <Controls showInteractive={false} position="bottom-left" />
       </ReactFlow>
     </div>

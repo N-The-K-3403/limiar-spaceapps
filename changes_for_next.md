@@ -1,7 +1,9 @@
 # changes_for_next.md
 
 Change list from Elias's review of the tabbed dashboard (2026-11-15, after the first browser look).
-Nothing here is built yet. This file is meant to survive several sessions: work top to bottom,
+Status (updated 2026-11-15, evening): most of this list is now built. Sections 1.2, 2.3, 2.5, 3 (Evidence), 4 (Workbench), 5 (icons, density), the describe box
+(1.1, 2.1) and all of section 10 except the hexagon-in-browser check are done; see the session log in section 9 for what was
+built and what was NOT looked at in a browser. Session D (2026-11-15, night) built 2.2 (flame, not yet seen in a browser) and mitigated 2.4 (cause unconfirmed). Still open: responsive and empty-state items in section 5. This file is meant to survive several sessions: work top to bottom,
 tick items off, and move finished ones to ROADMAP.md at the end of each work block.
 
 Overall verdict from the owner: "otherwise, really good!" Keep the tab structure, the LIMIAR look,
@@ -30,7 +32,7 @@ All five open questions from the first draft are now answered; see section 8.
 
 ## 1. Planner tab (`src/tabs/Planner.jsx`)
 
-### 1.1 [ ] "Describe it in words" box that fills the experiment form
+### 1.1 [x] "Describe it in words" box that fills the experiment form (built in Session B)
 What the owner asked: a small text window between the hero text and the "Your experiment" card. The
 person writes the experiment in plain language, an AI turns it into structured conditions (an export),
 the form fills in, and the five result cards below update by themselves.
@@ -91,6 +93,9 @@ the Workbench Scenario node. Goal is ergonomics: easier to see, easier to read, 
   includes the unit.
 
 ### 1.3 [~] Readability, spacing and negative space (Planner)
+Status after Sessions A and C-UI: done = preset cards (no truncation), "Gravity" duplicate removed (pills replaced by slider ticks), hero at-a-glance tiles,
+prior art with "show more", Vary / Hold / Measure in three columns, icons in `AxisChip`, jump index, larger mono labels and sentence case (10.8).
+Not measured yet: contrast of `.note` against the background, and the mobile layout. Original notes below.
 Seen in the screenshots:
 - The hero leaves the whole right half empty (`.hero`, `.display`, `.lede`). Fill it: a compact live
   summary tile row or a small "last plan" strip (verdict, #measured sources, #gaps) that updates with the
@@ -113,7 +118,7 @@ Seen in the screenshots:
 
 ## 2. Estimator tab (`src/tabs/Estimator.jsx`)
 
-### 2.1 [ ] "Describe a scenario" box that fills the Scenario card
+### 2.1 [x] "Describe a scenario" box that fills the Scenario card (built in Session B)
 Owner: same idea as the Planner, a header between the text and the cards. The person describes a scenario
 to an AI, and the Scenario card on the side updates.
 
@@ -128,7 +133,7 @@ material, set the closest and say so in the "What I understood" strip. Apply wit
 Same trust rules as 1.1: changed-field chips with old > new, assumptions line, Undo, rule-based fallback.
 Same `api/parse.js` endpoint with a `target: 'estimator' | 'planner'` field.
 
-### 2.2 [ ] Animated flame on the "Estimated outcome" card
+### 2.2 [x] Animated flame on the "Estimated outcome" card (built in Session D; NOT yet seen in a browser)
 Owner: a small looping flame on the right side of the "Flame spreads" card. Continuous in the value, with
 different looks for spreading, extinguishing and no flame.
 
@@ -157,22 +162,23 @@ Component: new `src/ui/FlameLoop.jsx` (inline SVG + CSS keyframes in `src/styles
 - Gravity: track covers the trained span with detents at the `GRAVITIES` presets; keep the existing message
   about 0 g and 1 g being reference data (`G_MIN`, `G_MAX`), not interpolated.
 
-### 2.4 [ ] Visual fix on the outcome card
+### 2.4 [~] Visual fix on the outcome card (mitigated in Session D; cause NOT confirmed)
 In the screenshot the "log-odds +5.39 · extinguish ← 0 → spread" line has a solid red/brown highlight box
 behind the text. It reads like a rendering bug. Check the `note num` styles and the `outside` colour rules
 in `src/styles/dash.css` and the inline `style` on the card in `Estimator.jsx`; make it plain text or a
 deliberate chip.
 
-### 2.5 [ ] Share the scenario between tabs
-`Estimator` keeps its scenario in local `useState` while `Planner` keeps `raw` in `App.jsx`. Consider lifting
-one shared scenario so a described scenario carries into Planner, Evidence and the Workbench. Not required
-for the first pass; decide after 1.1 and 2.1 are working.
+### 2.5 [x] Share the scenario between tabs
+`App.jsx` owns one Planner-shaped scenario. Planner, Estimator and the Workbench Scenario node stay synchronized;
+Evidence shows a distinct, explicitly non-measurement marker when the scenario has an in-range airflow and oxygen
+value. Estimator/Workbench map unsupported Planner material classes to a model material as a proxy and label it.
+Estimator-only edits preserve Planner's airflow and question.
 
 ---
 
 ## 3. Evidence tab (`src/tabs/Evidence.jsx`)
 
-### 3.1 [ ] Fix the "scroll down, scroll up" problem with the data table
+### 3.1 [x] Fix the "scroll down, scroll up" problem with the data table
 Owner's description: you have to go back down and then up on the data table to see what something means;
 if someone scrolls all the way down they will not know what is happening; use an approach like the Estimator.
 
@@ -191,7 +197,7 @@ Proposed fix, following the Estimator's layout (`.cols` with a `.sticky` aside):
 - Add a result count under the filter ("27 of 39 points shown") so filtering has visible feedback.
 - A tiny "What this chart shows" line under the legend, in plain language.
 
-### 3.2 [ ] Chart fixes seen in the screenshot
+### 3.2 [x] Chart fixes seen in the screenshot
 - The right-hand "no data" label is clipped ("no date"). In the SVG, `<text x={sx(dMax) + 6} ...>` runs past
   the plot edge. Anchor it with `textAnchor="end"` at `W - M.r - 6`.
 - The "Selected point" provenance chip ("ESTIMATED FROM FIGURE") overflows the card edge. Fix `Prov`
@@ -234,7 +240,7 @@ B. Keep it as an open workbench but add proper onboarding: intro banner, a guide
 C. Hide the tab for the submission and ship A or B after the deadline.
 
 Whatever is chosen, these are worth doing:
-- Rename the tab to something that says what it does (for example "How it works" or "Model graph").
+- Rename the tab to something that says what it does (for example "Node Workspace" or "Model graph").
 - Build an auto-layout (left to right: Scenario > Model > Checks > Output) instead of hand positions in
   `recipes.js`, and fit the view on load (`fitView`).
 - Fix the clipped Nearest evidence table: constrain node width in `src/canvas/NodeShell.jsx` and let the table
@@ -249,6 +255,12 @@ Whatever is chosen, these are worth doing:
 - Finish or remove the two "soon" recipes. If kept, `gaps` can reuse the coverage logic from `src/lib/plan.js`
   and `compare` can reuse `src/lib/rank.js`.
 - Align the node styling with `dash.css` tokens so the canvas does not feel like a different app.
+
+### 4.3 [x] Workbench onboarding and layout
+- Replaced the full-width introduction with a first-click help modal to give the canvas its vertical space; node captions explain each step.
+- The starter recipe is laid out left-to-right by node family and the canvas fits the layout on load.
+- Fixed the Nearest evidence table to wrap within the node; removed unfinished "soon" recipes and added an explicit reset action.
+- Renamed the tab to "Node Workspace" and aligned the canvas palette with the dashboard tokens.
 - Re-check that provenance inheritance still works after any change (`node web/scripts/check_graph.mjs`).
 
 ---
@@ -344,3 +356,148 @@ Not done / next:
 - 2.4 red highlight behind the log-odds line is still unexplained (no rule in dash.css produces it; check `src/styles.css` if it is still imported).
 - Hero "at a glance" for Evidence and Estimator, empty/loading state component, responsive pass: still open.
 - Next session: B (describe box).
+
+### Session B (2026-11-15): describe box end to end + hover pass. Build and Node checks pass; NOT yet checked against real Gemini.
+Done:
+- `api/parse.js`, dev twin in `vite.config.js` (`devApi` serves /api/chat and /api/parse), `parseSpecText()` in `src/lib/assistant.js` (Gemini, then rules fallback, validated twice).
+- `src/lib/specpatch.js` (`plannerPatch`, `estimatorPatch`, field meta), `src/ui/DescribeBox.jsx` (examples, chips old > new, kept, assumptions, Undo, JSON export, AI/rules label). Wired into Planner and Estimator hero.
+- `dash.css` blocks "Session B" (describe box, hover flair, affordances) and "Session B2" (thinner sliders, page max-width 1760).
+- Scripts: `check_specpatch.mjs` (9 PASS), `check_nlspec.mjs`, `check_plan.mjs`, `check_graph.mjs` all pass.
+Seen by the owner in the browser (screenshots 2026-11-15 19:30): sliders felt too heavy (thumb), band is liked and must stay; page had large empty side margins; persona toggle does nothing.
+Still open from this session: 2.4 cause not confirmed (styles.css is orphaned; suspect `::selection` orange or an inspect-element check), SI-use declaration in `submission/`, ROADMAP.md entry.
+
+### Session C-AI (2026-11-15, night): explanation-level pop-up (10.10) + Assistant tab (10.11). Build and Node checks pass; NOT yet looked at in a browser, NOT yet tried against real Gemini.
+Done:
+- `src/lib/level.js`: Neutral / Student / Professor / Engineer, saved in localStorage (`limiar.level`, try/catch), module store read with `useSyncExternalStore`.
+  This replaces the `useAILevel()` hook idea in 10.10. `App.jsx` exposes `needLevel()` (a promise: resolves at once if a level is saved, otherwise opens the modal; null = cancelled, Esc cancels) and `openLevel()`.
+- `src/ui/LevelModal.jsx`, the pop-up. The header Student / Professor / Engineer toggle is gone. Every AI action awaits `needLevel()` first: the drawer, the Assistant tab and "Write the brief with the assistant". The describe box does not ask (it only reads fields).
+- `src/tabs/Chat.jsx` (tab `ai`, label "Assistant"): chat list (new, rename, delete with inline Yes / No), starter questions, "Level: X" chip, limits 30 chats and 40 messages with a visible note, saved in `limiar.chats`. Errors are shown once and never stored.
+  `src/lib/chats.js` holds storage. `src/ui/ChatMessage.jsx` is shared with the drawer (every model message shows the "AI-written" chip). Three new icons: plus, trash, edit.
+- `public/data/project_brief.json`, loaded by `App.jsx` and sent as `project_brief` inside the context. Server rules 8 (Neutral) and 10 (brief facts are cited as "(project brief)"; say "not covered" otherwise) are in `api/_gemini.js`. Server default persona is now Neutral in `api/chat.js`, `api/_gemini.js` and `vite.config.js` (it was Student).
+- Brief sources: written from PROJECT.md and AGENTS.md, not from README / FEATURES / source_discrepancies as 10.11 said. Every number was re-checked against PROJECT.md tonight (hard rule 1); three wording fixes were made (see below).
+- Not done from 10.11: the "Continue in the Ask tab" button in the drawer (marked optional there); on narrow screens the chat list stacks above the conversation (max 180 px, scrolls) instead of becoming a drawer.
+Resolved with Elias: the 32/6 split was selected post-hoc, though a fixed seed (20261114) makes it reproducible; outcome balance was not used to choose it. PROJECT.md and ROADMAP.md now state both facts.
+Other brief fixes: the FIRE-X line no longer says the project is "not about a chatbot" (we now ship one); the PSI line no longer says no numeric conditions were extracted (2,945 AI-extracted fields exist, 0 reviewed; the tool just does not use them yet).
+
+### Session C-UI (2026-11-15, night): quick fixes 10.1 to 10.9. Build and Node checks pass; NOT yet looked at in a browser.
+Done:
+- 10.2 `src/ui/DecimalInput.jsx`: type=text, inputMode=decimal, always a dot, a typed comma becomes a dot at once, letters ignored, never clamped, empty-while-typing kept, resyncs when the slider / preset / describe box changes the value. Used by `SliderField` and `NumField` (bits.jsx). `src/canvas/NumField.jsx` was already text-based and dot-formatted, so it is unchanged.
+- 10.3 `tickModes()` in `SliderField.jsx`: measures the tick row (ResizeObserver) and gives each tick a mode: full label, icon only, or a dot. Priority: `pri` on the tick, else icon, named, plain number. Pressure: 10.2 psi and 1 atm win over Suit and 8.2 psi. Gravity: Moon wins over Micro, which falls back to its icon. The rail mark and the click target always stay; the tooltip carries the full text.
+- 10.4 no change, as decided.
+- 10.5 coverage table (`tbl cov`): 22 px right padding on the numeric column.
+- 10.6 `.sticky`: `max-height: calc(100vh - 84px)` with its own thin scrollbar; off below 1000 px. It applies to every `.sticky` aside, so check that the Estimator Scenario card really uses that class.
+- 10.7 hero: bigger title (up to 62 px), lede 16.5 px, more padding in the describe box and tiles, 40 px under the hero. Tiles not moved.
+- 10.8 sentence case in the sans font for labels, kv terms, table heads, `summary`, axis chips and all chips except provenance (verified / estimated / unreviewed) and kind chips marked `prov` (dataset, measured). Part eyebrows and the "MATCH" caption stay mono uppercase.
+- 10.9 units inside number boxes: 12.5 px sans at about 70 % white, box widened to 128 px.
+- 10.1 `AxisHex` in `bits.jsx`: six vertices in fixed order (fuel, O2, pressure, gravity, flow, outcome), filled / half / hollow / dashed, tooltip lists the statuses, axes not in use are left out. Used in the Planner `PriorRow` (the only place a match block exists). Plan B (six dots in a row) was not needed yet; decide after looking at it at 30 px.
+- Follow-up after browser measurement: moved the range input's hit area up 10 px so the thumb center aligns with the 4 px rail center in the shared slider.
+Checks run: `npm run build` ok (83 modules); `check_plan.mjs` all PASS; `check_graph.mjs` all PASS.
+NOT checked in a browser: hexagon legibility, tick modes at 372 px and in the Workbench node, the scrolling form card (and its hover shadows near the edge), the chip casing on every tab, hero size on a 1080p screen, mobile.
+Environment: `npm` and `node` were added to the super-shell whitelist as safe (the owner's standing rule). REMOVE both at the end of the project (see ROADMAP).
+Still open after this session: 2.2 flame, 2.4 red band, 2.5, section 3 Evidence, section 4 Workbench, responsive pass and empty / loading state (section 5). The SI-use declaration is now drafted in `submission/SI_declaration.md`; its checklist for Elias is at the bottom of that file.
+
+### Session D (2026-11-15, night): text repair + flame (2.2) + log-odds line (2.4). Build, `check_plan.mjs` and `check_graph.mjs` pass; NOT looked at in a browser.
+Repair (another AI had left contradictory texts; there is no git repository, so this was found by reading, not by diff):
+- The 32/6 split was described three ways. Now one version everywhere: chosen post-hoc, reproducible with a fixed seed (20261114), outcome balance not used.
+  Fixed: `ROADMAP.md` (a line that said it was "not after seeing the data", and a pending item that was already resolved), `web/FEATURES.md` (F6), the user-facing
+  brief `public/data/project_brief.json` (it pointed at "PROJECT.md"), and two labels the person sees in the app: `src/model.js` ("Fixed-seed split, chosen post-hoc")
+  and `src/graph/defs.js` ("post-hoc 32/6 split (fixed seed)"). `PROJECT.md`, `data/README_takahashi2026.md`, `research/RESULTS.md` and `research/explicacao_projeto.html` were already correct.
+- Removed a stray fragment ("holdouts.") in the ROADMAP log (21:59 entry).
+Built:
+- 2.2 `src/ui/FlameLoop.jsx` + the "Flame" block at the end of `dash.css`. One number (`z`) drives three named states: spreading (z >= 0.75), dying (-3.5 < z < 0.75, short and
+  unsteady near 0, with a smoke wisp), none (z <= -3.5: dim ember and a wisp). Orange / yellow in every state. `outside` keeps the flame and adds a dashed red outline and an
+  "extrapolation" tag. `prefers-reduced-motion` gives a static flame. The outcome card is now a row: text left, flame right (wraps on narrow screens). Not added: the small flame per rung in Planner part 4 (optional).
+- 2.4 No CSS rule produces a coloured box behind that line. The only candidate is `::selection` (orange at 35 %, which looks like a brown-red box on the dark background). It is now lavender,
+  and the log-odds line is a plain `.logodds` text with the number in bold. If the red box is still there in the browser, inspect the element: the cause is something else.
+Revision after the owner's first look (2026-11-15, night): the candle-shaped SVG flame was replaced by a microgravity-style ball of flame (`FlameLoop.jsx` is now a canvas particle system:
+particles drift outward in all directions, additive blending, a wide soft halo that fills the container). The "Flame spreading / dying out" caption is gone (the state stays in `aria-label`);
+the "extrapolation" tag and dashed outline stay. The old SVG keyframes were removed from `dash.css`. Build passes; not seen in a browser.
+Not verified: how the flame looks and moves (shape, sizes at 132 px, wisp), the dashed outline, the card layout at narrow widths, and whether the red box is gone.
+Still open: 2.5, Workbench (section 4), responsive pass and a shared empty / loading state (section 5).
+
+### Session E (2026-11-15): Evidence tab (3.1, 3.2)
+Done:
+- Added the Evidence-specific layout styles: the control cards stay beside the chart on desktop, while the aside becomes normal-flow on narrow screens.
+- The data table has its own bounded scroll area, sticky header, and horizontal overflow rather than clipping columns. Row hover/selection is visible and keyboard focus is outlined.
+- Kept the existing chart/table cross-highlighting and chart-to-row scrolling; added wrapping constraints so the selected-point provenance chip stays inside its card.
+- Styled the outcome and symbol/line legends as separate groups. The chart already anchors the right-hand “no data” label inside the SVG and has a plain-language caption.
+- Updated the section 3 status in this file. No optional range sliders were added.
+- Browser check: desktop aside is sticky; table is 340 px tall with a sticky header; filtering shows 5 of 39 verified points and restores all 39; chart selection scrolls to the matching row; the provenance chip stays inside its card.
+- At 390 px, the aside is static and the page has no horizontal overflow; only the table scrolls horizontally. Remaining responsive checks across other tabs stay open for section 5.
+Checks run: `npm run build` passed (84 modules).
+
+### Session F (2026-11-15): shared scenario (2.5)
+Done:
+- Lifted scenario state to `App.jsx`; the Planner remains the source shape, including its optional airflow and question.
+- Estimator reads and writes the shared material, thickness, oxygen, pressure and gravity. Estimator-only edits preserve the Planner-only fields; describing an unsupported material retains that class and labels the model's proxy.
+- Workbench imports the shared values into its Scenario node and sends node edits back. Unsupported materials are visibly identified as proxies.
+- Evidence overlays the shared oxygen/airflow as a separate plus marker, only when both values fit the displayed axes. It is labelled as a coordinate reference, not a measurement or prediction; the data and fit remain unchanged.
+- The shared initial scenario follows the Planner's existing default, so Estimator now opens with those same values instead of its former separate defaults.
+Checks: `node scripts/check_scenario.mjs`, `node scripts/check_plan.mjs`, `node scripts/check_graph.mjs` and production build passed. Browser check confirmed Planner → Estimator (including the shared initial defaults), Estimator → Evidence (marker at 22% O₂ / 10 cm/s), Planner → Workbench (Scenario node at 22%), and a Workbench edit back to Planner (20% O₂, with airflow preserved).
+
+### Session G (2026-11-15): Workbench onboarding and LIMIAR branding
+- Replaced the space-consuming intro banner with a first-click help modal; node captions, reset-to-recipe action, left-to-right family layout, and wrapped Nearest evidence columns remain; removed unfinished recipe placeholders.
+- Renamed the tab to "Node Workspace" and replaced the old challenge title in the app header, browser title/favicon, and assistant identity with the supplied LIMIAR marks.
+- Recolored the remaining canvas-specific blue accents to the dashboard's lavender/orange design tokens.
+- Confirmed `api/chat` and `api/parse` read `GEMINI_API_KEY` server-side. No Vercel deployment was triggered: this workspace has no linked project or Vercel CLI; the variable is configured for Production in Vercel.
+- Build and browser review: pending.
+
+---
+
+## 10. Review after the first look at the describe box (owner answers, 2026-11-15)
+
+Context: the audience is scientists. Owner answered each point; decisions below are final unless marked [?].
+
+### 10.1 [x] Match score + six-axis glyph (replaces old point 1; built, check legibility at 30 px in the browser)
+- DECIDED: keep "NN% MATCH" as is. It is clearly a match, not a probability. Do not rename it.
+- Add a small hexagon glyph next to the percentage: new `AxisHex` in `src/ui/bits.jsx` (inline SVG, ~28 px). One vertex per axis (Fuel, O2, Pressure, Gravity, Flow, Outcome; same order as the chips). Vertex dot: filled = inside, half = near, hollow = outside, dashed = not stated. Reuse the status colours of `.ax`. Tooltip lists the six statuses. If the plan has fewer than 6 axes (no flow requested), draw only the vertices in use. If it reads oddly at small size, fall back to six small dots in a row (designer's call).
+- Used in `PriorRow` (Planner) and anywhere else a `match` block appears.
+
+### 10.2 [x] Number inputs: always a dot (point 2)
+The fields show `0,125`, `70,3` (browser locale on `type=number`) while the rest of the page uses dots. In `NumField` / `SliderField` number box: `type=text`, `inputMode=decimal`, always render with a dot, accept a comma when typing and convert it. Typing is still never clamped; keep the empty-while-typing behaviour. Also applies to `src/canvas/NumField.jsx`.
+
+### 10.3 [x] Slider tick labels must not collide (point 3)
+Seen: "8.2 psi" vs "10.2 psi", "Micro" vs "Moon", "0.125" under the thumb. In `SliderTrack` (`src/ui/SliderField.jsx`): measure tick x positions; hide the label (keep the tick and its click target) when it is closer than ~44 px to the previous visible label; priority to named references over plain numbers. The current value lives in the number box, not under the thumb.
+
+### 10.4 [x] Gravity slider keeps the filled bar (point 4, DECIDED: no change)
+Owner: part of the product is being able to see which experiments do not work. Keep the fill and the whole range selectable. Hard rule 8 stays enforced in the wording ("Micro and Earth are measured reference points; nothing between them is interpolated") and in the model, not by hiding the slider.
+
+### 10.5 [x] Coverage table header collision (point 5)
+Planner part 2: "YOUR VALUE" runs into "MEASURED SOURCES INSIDE". Add right padding to `.tbl th.num` / `td.num` in that table (about 18 px) so the next header starts clear of it.
+
+### 10.6 [x] "Your experiment" card taller than the screen (point 6)
+`.sticky` aside in the Planner: `max-height: calc(100vh - 84px); overflow-y: auto;` with a thin scrollbar, so Airflow and Question are reachable while the right column scrolls. Same for the Estimator Scenario card.
+
+### 10.7 [x] Bigger hero, more air under it (point 7, replaces my earlier hero idea)
+Do NOT rearrange the tiles. Only: make the hero larger (title size, lede width, more padding around the describe box and tiles) and add clear space between the hero and the dashboard (the `.cols` grid), about 32-40 px. Keep the tiles where they are.
+
+### 10.8 [x] Less shouting in chips and labels (point 8)
+Keep UPPERCASE mono only for provenance chips (verified, estimated, unreviewed, measured, dataset). Everything else ("WHY THIS RANK", "SHOW 3 MORE...", "PSI INVESTIGATIONS...", "START FROM", axis chips, kv labels) goes to sentence case in the sans font at 12-13 px. Edit `.eyebrow`, `.lbl`, `.field > span`, `details.why > summary`, `.kv dt`, `.tbl th` in `dash.css`; part eyebrows ("01 / PRIOR ART") may stay mono.
+
+### 10.9 [x] Unit text inside the number box (point 9)
+`.sf-num i` (mm, %, kPa, g) is tiny and faint. Raise to 12.5 px and `--text` at about 70 % so it reads as part of the value.
+
+### 10.10 [x] Explanation level becomes a first-use pop-up (replaces the header toggle)
+Owner: remove the Student / Professor / Engineer switch from the header (it did nothing visible). Instead:
+- The first time the person triggers any AI action (Ask Limiar, the AI tab, "Write the brief with the assistant", the describe box in AI mode), show a modal BEFORE the call: short text "The assistant can explain things at your level. Pick one; you can change it any time."
+- Four options: Neutral (new, default wording of the system prompt, no persona), Student, Professor, Engineer. One line under each saying what changes.
+- Saved in `localStorage` (key `limiar.level`, wrapped in try/catch; works on Vercel, it is not an artifact). Change later from a small "Level: Professor" chip in the assistant header and the AI tab.
+- `persona` in `src/App.jsx` becomes this value (`Neutral` added to the list in `_gemini.js` SYSTEM rule 8: Neutral = plain, balanced, no extra analogy). The describe box parser ignores it (it only reads fields).
+- The deterministic brief (`localBrief`) is unchanged for now.
+- Do the pop-up as a reusable `useAILevel()` hook + `LevelModal.jsx`; the modal resolves a promise so the original action continues after the choice.
+
+### 10.11 [x] New "AI" tab: a full chatbot (built; the drawer's "Continue in the Ask tab" button is not)
+Owner: a tab for the AI, for general explanations about the project and so on. Creating and deleting chats is enough.
+- New tab `ai` (icon `chat`, label "Ask" or "Assistant") in `TABS` and `TAB_ICON`. Component `src/tabs/Chat.jsx`.
+- Layout: left column = list of chats (New chat button, title, delete with an inline confirm), right = the conversation (reuse the message rendering and citation chips from `src/ui/Assistant.jsx`; extract shared pieces rather than copy). Mobile: list collapses into a drawer.
+- Storage: chats persist in `localStorage` (`limiar.chats`, array of `{id, title, created, messages}`), title = first user message cut to ~40 chars, editable. Cap at 30 chats and 40 messages each; show a note when trimming. All try/catch.
+- Context sent to Gemini: (a) the current plan context from `planContext()` when a plan exists, plus (b) a small, fixed project brief file `web/public/data/project_brief.json` written ONLY from PROJECT.md / README.md / FEATURES.md / source_discrepancies (scope, data sources and licences, models and their held-out numbers, the honest limits). Every number in it must trace to those files (hard rule 1). The existing `/api/chat` accepts this as `context`; raise the 24000-char clip only if needed.
+- Rules stay as in `_gemini.js` SYSTEM: only CONTEXT, cite ids, "no data" when silent, no safety advice. Add rule: if asked something about the project that the brief does not cover, say it is not covered.
+- Suggested starter questions: what is this project, what data it uses, what MARGIN-Spread can and cannot say, what the gaps map shows.
+- The floating "Ask Limiar" drawer stays as the quick, in-context helper; it shares the level choice (10.10) and may offer "Continue in the Ask tab" to move the thread into a saved chat.
+- SI declaration (`submission/`): add the chatbot and the level setting to the SI-use list (hard rule 4); label AI messages as AI-written.
+
+### 10.12 Suggested order for the next sessions (status: steps 1 and 2 are built, see Session C-UI and C-AI in section 9)
+1. Quick CSS/UI fixes: 10.2, 10.3, 10.5, 10.6, 10.7, 10.8, 10.9, then 10.1 (hexagon).
+2. 10.10 (level modal) then 10.11 (AI tab), since the tab depends on the level.
+3. Then the old plan: Session C (flame, 2.4), D (Evidence, Planner polish), E (Workbench).

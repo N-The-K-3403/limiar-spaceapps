@@ -38,7 +38,7 @@ const provOfRecord = (p) => (p.startsWith('verified') ? 'verified' : p.startsWit
 export const FAMILIES = { scenario: 'Scenario', model: 'Model', check: 'Check', output: 'Output' }
 
 // ---- shared context (built once from the loaded JSON) ----------------------------------------
-const SHORT = { g16: 'leave-1/6 g out', g38: 'leave-3/8 g out', m32: 'seed-selected 32/6 split' }
+const SHORT = { g16: 'leave-1/6 g out', g38: 'leave-3/8 g out', m32: 'post-hoc 32/6 split (fixed seed)' }
 
 export function makeCtx({ model, cases, manifest }) {
   const variants = variantsOf(model)

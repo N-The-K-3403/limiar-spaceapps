@@ -6,6 +6,7 @@ import NodeShell, { Waiting } from './NodeShell.jsx'
 import DomainBar from './DomainBar.jsx'
 import NumField from './NumField.jsx'
 import { SliderTrack, SLIDE } from '../ui/SliderField.jsx'
+import { mergeWorkbenchScenario } from '../lib/scenario.js'
 
 const ok = (res) => res && res.status === 'ok'
 
@@ -24,10 +25,17 @@ const outsideMsg = (r) =>
 
 // ---- Scenario -------------------------------------------------------------------------------
 export function ScenarioNode({ id, data, selected }) {
-  const { results, ctx } = useEval()
+  const { results, ctx, onScenarioChange } = useEval()
   const update = useGraph((s) => s.updateData)
   const res = results[id]
-  const set = (k) => (v) => update(id, { [k]: v })
+  const apply = (patch) => {
+    const values = { ...data, ...patch }
+    update(id, patch)
+    if (onScenarioChange && ctx?.model) {
+      onScenarioChange((current) => mergeWorkbenchScenario(current, values, ctx.model.categorical_features.material))
+    }
+  }
+  const set = (k) => (v) => apply(k === 'material' ? { [k]: v, materialProxy: false, sourceMaterialLabel: '' } : { [k]: v })
   return (
     <Shell id={id} type="scenario" selected={selected} res={res}>
       <div className="row2">
@@ -36,7 +44,7 @@ export function ScenarioNode({ id, data, selected }) {
           value=""
           onChange={(e) => {
             const a = ATMOSPHERES[Number(e.target.value)]
-            if (a) update(id, { o2_pct: a.o2_pct, pressure_kPa: a.pressure_kPa })
+            if (a) apply({ o2_pct: a.o2_pct, pressure_kPa: a.pressure_kPa })
           }}
         >
           <option value="" disabled>
@@ -53,7 +61,7 @@ export function ScenarioNode({ id, data, selected }) {
           value=""
           onChange={(e) => {
             const g = GRAVITIES[Number(e.target.value)]
-            if (g) update(id, { gravity_g: g.g })
+            if (g) apply({ gravity_g: g.g })
           }}
         >
           <option value="" disabled>
@@ -85,6 +93,7 @@ export function ScenarioNode({ id, data, selected }) {
           ))}
         </select>
       </label>
+      {data.materialProxy && <div className="note">MARGIN-Spread uses {data.material} as a proxy for {data.sourceMaterialLabel}; this is not a trained material match.</div>}
       {ok(res) && res.view.clamped && (
         <div className="line ember mono">
           Gravity limited to {G_MIN}-{G_MAX} g. 0 g and 1 g are measured reference data, never estimated.
@@ -206,7 +215,13 @@ export function NearestNode({ id, selected }) {
   if (!ok(res)) return <Shell id={id} type="nearest" selected={selected} res={res} />
   return (
     <Shell id={id} type="nearest" selected={selected} res={res}>
-      <table className="mini">
+      <table className="mini nearest-table">
+        <colgroup>
+          <col className="nearest-test-col" />
+          <col className="nearest-condition-col" />
+          <col className="nearest-outcome-col" />
+          <col className="nearest-distance-col" />
+        </colgroup>
         <thead>
           <tr>
             <th>Test</th>

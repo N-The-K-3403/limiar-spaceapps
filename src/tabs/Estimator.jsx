@@ -3,13 +3,23 @@ import { LABELS, NUMERIC, domainReport, nearestCases, score } from '../model.js'
 import { ATMOSPHERES, G_MAX, G_MIN, round } from '../graph/defs.js'
 import { Eyebrow } from '../ui/bits.jsx'
 import SliderField, { SLIDE } from '../ui/SliderField.jsx'
+import DescribeBox from '../ui/DescribeBox.jsx'
+import FlameLoop from '../ui/FlameLoop.jsx'
+import { ESTIMATOR_FIELDS, estimatorPatch } from '../lib/specpatch.js'
+import { estimatorMaterialForScenario, estimatorScenario, mergeEstimatorScenario } from '../lib/scenario.js'
 
 const loPct = (z) => Math.max(2, Math.min(98, 50 + (z / 6) * 50))
 
-export default function Estimator({ ctx }) {
+export default function Estimator({ ctx, presets = [], scenario, setScenario }) {
   const { model, cases, variants, retained, inSample } = ctx
   const [variantKey, setVariantKey] = useState('full')
-  const [x, setX] = useState({ material: 'ACRYPLEN', thickness_mm: 0.125, o2_pct: 21, pressure_kPa: 101.3, gravity_g: 0.165 })
+  const materials = model.categorical_features.material
+  const x = useMemo(() => estimatorScenario(scenario, materials), [scenario, materials])
+  const setX = (update, meta) => setScenario((current) => {
+    const values = estimatorScenario(current, materials)
+    const next = typeof update === 'function' ? update(values) : update
+    return mergeEstimatorScenario(current, next, materials, meta?.parsed?.fields?.material_class)
+  })
   const set = (k, v) => setX((s) => ({ ...s, [k]: v }))
   const variant = variants.find((v) => v.key === variantKey) || variants[0]
   const ok = NUMERIC.every((k) => Number.isFinite(+x[k]) && x[k] !== '')
@@ -19,6 +29,7 @@ export default function Estimator({ ctx }) {
   const outside = domain.filter((d) => d.status === 'outside')
   const near = ok ? nearestCases(model, cases, xn, 3) : []
   const gravityBad = ok && (xn.gravity_g < G_MIN || xn.gravity_g > G_MAX)
+  const materialMapping = estimatorMaterialForScenario(scenario, materials)
 
   return (
     <div className="page">
@@ -28,6 +39,7 @@ export default function Estimator({ ctx }) {
         <p className="lede">
           Estimates whether an already-burning thin sample keeps spreading during a partial-gravity flight. It does not predict ignition, heat release, flame size or habitat safety.
         </p>
+        <DescribeBox target="estimator" current={x} setCurrent={setX} fields={ESTIMATOR_FIELDS} toPatch={(parsed, cur) => estimatorPatch(parsed, cur, presets, materials)} />
       </div>
 
       <div className="cols">
@@ -42,9 +54,10 @@ export default function Estimator({ ctx }) {
           <label className="field">
             <span>Material</span>
             <select value={x.material} onChange={(e) => set('material', e.target.value)}>
-              {model.categorical_features.material.map((m) => <option key={m}>{m}</option>)}
+              {materials.map((m) => <option key={m}>{m}</option>)}
             </select>
           </label>
+          {materialMapping.proxy && <p className="note">The shared material, {materialMapping.sourceLabel}, is not a trained category. This estimate uses {x.material} as a proxy; treat it as outside the model's material domain.</p>}
           {NUMERIC.map((k) => (
             <SliderField
               key={k}
@@ -71,18 +84,23 @@ export default function Estimator({ ctx }) {
           {!ok && <div className="empty">Fill in every field to get an estimate.</div>}
           {ok && (
             <>
-              <div className={'card' + (outside.length ? '' : '')} style={{ borderColor: outside.length ? 'rgba(255,82,82,0.5)' : undefined, borderStyle: outside.length ? 'dashed' : undefined }}>
-                <div className="eyebrow">Estimated outcome · uncalibrated score, not a probability</div>
-                <div className="verdict-big" style={{ fontSize: 34, margin: '8px 0 10px', color: z >= 0 ? 'var(--heat2)' : 'var(--plasma2)' }}>{z >= 0 ? 'Flame spreads' : 'Flame extinguishes'}</div>
-                <div className="lo-bar" style={{ maxWidth: 420 }}>
-                  <i className="mid" />
-                  <i className={'pt ' + (z >= 0 ? '' : 'e') + (outside.length ? ' out' : '')} style={{ left: loPct(z) + '%' }} />
-                </div>
-                <div className="note num" style={{ marginTop: 6 }}>log-odds {z >= 0 ? '+' : ''}{round(z, 2)} · extinguish ← 0 → spread</div>
-                <div className="meta" style={{ display: 'flex', gap: 6, marginTop: 12, flexWrap: 'wrap' }}>
-                  <span className="chip estimated">estimated, retrospective</span>
-                  {outside.length > 0 && <span className="chip bad">outside training range</span>}
-                  {gravityBad && <span className="chip bad">gravity outside 0.05–0.6 g</span>}
+              <div className="card flame-card" style={{ borderColor: outside.length ? 'rgba(255,82,82,0.5)' : undefined, borderStyle: outside.length ? 'dashed' : undefined }}>
+                <FlameLoop z={z} outside={outside.length > 0} />
+                <div className="outcome-row">
+                  <div className="outcome-text">
+                    <div className="eyebrow">Estimated outcome · uncalibrated score, not a probability</div>
+                    <div className="verdict-big" style={{ fontSize: 34, margin: '8px 0 10px', color: z >= 0 ? 'var(--heat2)' : 'var(--plasma2)' }}>{z >= 0 ? 'Flame spreads' : 'Flame extinguishes'}</div>
+                    <div className="lo-bar" style={{ maxWidth: 420 }}>
+                      <i className="mid" />
+                      <i className={'pt ' + (z >= 0 ? '' : 'e') + (outside.length ? ' out' : '')} style={{ left: loPct(z) + '%' }} />
+                    </div>
+                    <div className="note num logodds">log-odds <b>{z >= 0 ? '+' : ''}{round(z, 2)}</b> · extinguish ← 0 → spread</div>
+                    <div className="meta" style={{ display: 'flex', gap: 6, marginTop: 12, flexWrap: 'wrap' }}>
+                      <span className="chip estimated">estimated, retrospective</span>
+                      {outside.length > 0 && <span className="chip bad">outside training range</span>}
+                      {gravityBad && <span className="chip bad">gravity outside 0.05–0.6 g</span>}
+                    </div>
+                  </div>
                 </div>
               </div>
 
