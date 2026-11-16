@@ -1,4 +1,7 @@
-import { Rich } from './bits.jsx'
+import { lazy, Suspense } from 'react'
+import { Cite } from './bits.jsx'
+
+const MarkdownContent = lazy(() => import('./MarkdownContent.jsx'))
 
 // One chat message, shared by the floating drawer and the Ask tab. Model messages carry an "AI-written" label (hard rule 4).
 export default function ChatMessage({ m, kb, onCite }) {
@@ -13,7 +16,11 @@ export default function ChatMessage({ m, kb, onCite }) {
       ) : m.role === 'error' ? (
         <div className="callout bad">{m.text}</div>
       ) : (
-        <div className="prose"><Rich text={m.text} kb={kb} onCite={onCite} /></div>
+        <div className="prose">
+          <Suspense fallback={<div className="note">Formatting response…</div>}>
+            <MarkdownContent text={m.text} kb={kb} onCite={onCite} />
+          </Suspense>
+        </div>
       )}
     </div>
   )
