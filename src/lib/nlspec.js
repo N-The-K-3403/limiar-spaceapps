@@ -13,9 +13,9 @@ export const PRESET_IDS = ['SC_MOON_CHALLENGE', 'SC_MOON_EARLY', 'SC_ISS_CABIN',
 // same defaults as MATERIALS[].thickness in src/lib/plan.js (kept here so the server can use this file)
 export const DEFAULT_THICKNESS = { pmma_thin_film: 0.125, paper_thin: 0.12, fabric: 0.3, pmma_thick: 40, liquid_droplet: 1, polymer_smoke: 1 }
 
-// Qualitative phrases with a documented, fixed reading. Single source of truth: the rules below AND the Gemini prompt use it.
-// Hard rule 1 still holds: the value comes from THIS table, never from the model's own judgement, and every use is
-// reported as an assumption so the person checks it. Vague words that are not listed here ("high oxygen") stay unset.
+// FALLBACK ONLY: fixed readings of qualitative phrases for parseRules (used when Gemini is unavailable).
+// Gemini itself interprets subjective terms freely (see PARSE_SYSTEM in api/_gemini.js); it does not use this table.
+// Every use is reported as an assumption so the person checks it. Phrases not listed here stay unset.
 export const GLOSSARY = [
   {
     key: 'gravity_g',
@@ -32,10 +32,6 @@ export const GLOSSARY = [
     note: (m) => `"${m}" read as 0 cm/s airflow.`,
   },
 ]
-
-export function glossaryPrompt() {
-  return GLOSSARY.map((g) => `- ${g.key} = ${g.value} for: ${g.words}`).join('\n')
-}
 
 const NUM_KEYS = ['thickness_mm', 'o2_pct', 'pressure_kPa', 'gravity_g', 'flow_cms']
 const RANGE = { thickness_mm: [0.001, 1000], o2_pct: [0, 100], pressure_kPa: [0.1, 1000], gravity_g: [0, 3], flow_cms: [0, 1000] }

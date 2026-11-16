@@ -1,6 +1,6 @@
 // Shared by the Vercel function (api/chat.js) and the Vite dev middleware (vite.config.js).
 // The key is read by the caller from the environment and never reaches the browser.
-import { MATERIAL_KEYS, PRESET_IDS, QUESTION_KEYS, sanitizeParsed, glossaryPrompt } from '../src/lib/nlspec.js'
+import { MATERIAL_KEYS, PRESET_IDS, QUESTION_KEYS, sanitizeParsed } from '../src/lib/nlspec.js'
 
 const SYSTEM = `You are Lhai, the AI explainer inside Limiar, a research workspace on microgravity and partial-gravity combustion evidence (NASA PSI data and two papers).
 
@@ -54,9 +54,8 @@ const PARSE_SYSTEM = `You convert a short plain-English description of a combust
 
 Rules:
 1. Include a field ONLY if the text states it, or names one of these fixed references: Moon = 0.165 g, Mars = 0.378 g, microgravity / zero-g / weightless = 0 g, Earth = 1 g, air = 21 % O2, 1 atm = 101.325 kPa.
-2. Never guess, estimate, or infer a number from context. If a value is not stated, OMIT the key.
-2b. QUALITATIVE TERMS: if the text uses one of the phrases below (or a clear synonym, in any language, e.g. "gravidade reduzida"), set that field to the value listed and add one short string to assumptions saying which phrase you read and that it was interpreted. Use ONLY these values; any other vague word ("high oxygen", "slow airflow", "low pressure") stays omitted.
-${glossaryPrompt()}
+2. Do not invent values the text says nothing about. If a field is not stated or implied, OMIT the key.
+2b. SUBJECTIVE TERMS: when the text describes a field qualitatively ("lower gravity", "oxygen-rich", "slow airflow", "low pressure", "very thin", in any language), interpret it yourself and set the field to your best realistic value for a combustion experiment, using the fixed references above as anchors (e.g. partial gravity is between 0 g and 1 g; Moon 0.165 g, Mars 0.378 g). Every field you set this way MUST be explained in assumptions with the phrase you read and the value you chose, so the person can check it.
 3. Convert units: psi x 6.894757 -> kPa; atm x 101.325 -> kPa; mmHg or torr x 0.133322 -> kPa; um / 1000 -> mm; cm x 10 -> mm; m/s x 100 -> cm/s; mm/s / 10 -> cm/s. A fraction such as 1/6 g is 0.1667 g.
 4. material_class: pmma_thin_film (thin PMMA / acrylic film), paper_thin (filter paper), fabric (cotton, SIBAL, cloth), pmma_thick (PMMA rod, sphere, slab), liquid_droplet, polymer_smoke (smoke from a heated polymer). Omit it if the material is not one of these.
 5. question: spread, extinction (extinction limit), ignition, detection (smoke detection), suppression. Omit if unclear.
